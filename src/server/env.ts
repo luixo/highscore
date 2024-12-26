@@ -1,13 +1,12 @@
-/**
- * This file is included in `/next.config.ts` which ensures the app isn't built with invalid env vars.
- * It has to be a `.js`-file to be imported there.
- */
-
 import { z } from 'zod';
 
 const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   NODE_ENV: z.enum(['development', 'test', 'production']),
+  NEXT_PUBLIC_PUSHER_APP_KEY: z.string(),
+  NEXT_PUBLIC_PUSHER_CLUSTER: z.string(),
+  PUSHER_APP_ID: z.string(),
+  PUSHER_SECRET: z.string(),
 });
 
 const _env = envSchema.safeParse(process.env);

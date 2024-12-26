@@ -1,5 +1,8 @@
 import { unstable_httpBatchStreamLink, loggerLink } from '@trpc/client';
 import { createTRPCNext } from '@trpc/next';
+import { MutationCache } from '@tanstack/react-query';
+
+import { toast } from 'react-hot-toast';
 
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 import type { NextPageContext } from 'next';
@@ -91,7 +94,16 @@ export const trpc = createTRPCNext<AppRouter, SSRContext>({
       /**
        * @see https://tanstack.com/query/v5/docs/reference/QueryClient
        */
-      // queryClientConfig: { defaultOptions: { queries: { staleTime: 60 } } },
+      queryClientConfig: {
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            toast.error(error.message);
+          },
+        }),
+        defaultOptions: {
+          queries: { retry: 0, staleTime: 10 * 1000 },
+        },
+      },
     };
   },
   /**

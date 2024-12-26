@@ -1,13 +1,13 @@
-/**
- * This file contains the root router of your tRPC-backend
- */
-import { createCallerFactory, publicProcedure, router } from '../trpc';
-import { postRouter } from './post';
+import { createCallerFactory, publicProcedure, router } from '~/server/trpc';
+import { router as gamesRouter } from './games/index';
+import { router as scoresRouter } from './scores/index';
+import { router as moderatorRouter } from './moderators/index';
 
 export const appRouter = router({
-  healthcheck: publicProcedure.query(() => 'yay!'),
-
-  post: postRouter,
+  healthcheck: publicProcedure.query(() => 'OK'),
+  games: gamesRouter,
+  scores: scoresRouter,
+  moderator: moderatorRouter,
 });
 
 export const createCaller = createCallerFactory(appRouter);

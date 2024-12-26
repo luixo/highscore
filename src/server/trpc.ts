@@ -1,50 +1,41 @@
-/**
- * This is your entry point to setup the root configuration for tRPC on the server.
- * - `initTRPC` should only be used once per app.
- * - We export only the functionality that we use so we can enforce which base procedures should be used
- *
- * Learn how to create protected base procedures and other things below:
- * @see https://trpc.io/docs/v11/router
- * @see https://trpc.io/docs/v11/procedures
- */
-
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import { transformer } from '~/utils/transformer';
 import type { Context } from './context';
+import { prisma } from '~/server/prisma';
+import { MODERATOR_COOKIE_NAME } from '~/server/cookie';
 
 const t = initTRPC.context<Context>().create({
-  /**
-   * @see https://trpc.io/docs/v11/data-transformers
-   */
   transformer,
-  /**
-   * @see https://trpc.io/docs/v11/error-formatting
-   */
   errorFormatter({ shape }) {
     return shape;
   },
 });
 
-/**
- * Create a router
- * @see https://trpc.io/docs/v11/router
- */
-export const router = t.router;
+export const { router, procedure: publicProcedure, createCallerFactory } = t;
 
-/**
- * Create an unprotected procedure
- * @see https://trpc.io/docs/v11/procedures
- **/
-export const publicProcedure = t.procedure;
-
-/**
- * Merge multiple routers together
- * @see https://trpc.io/docs/v11/merging-routers
- */
-export const mergeRouters = t.mergeRouters;
-
-/**
- * Create a server-side caller
- * @see https://trpc.io/docs/v11/server/server-side-calls
- */
-export const createCallerFactory = t.createCallerFactory;
+export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
+  const moderatorKey = ctx.cookies[MODERATOR_COOKIE_NAME];
+  if (typeof moderatorKey !== 'string' || !moderatorKey) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'No moderator key provided.',
+    });
+  }
+  const moderator = await prisma.moderator.findFirst({
+    where: {
+      key: moderatorKey.toLowerCase(),
+    },
+  });
+  if (!moderator) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: `Moderator key "${moderatorKey}" not found.`,
+    });
+  }
+  return next({
+    ctx: {
+      ...ctx,
+      session: moderator,
+    },
+  });
+});

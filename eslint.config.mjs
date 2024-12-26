@@ -1,6 +1,7 @@
 import tseslint from 'typescript-eslint';
 import reactPlugin from 'eslint-plugin-react';
 import hooksPlugin from 'eslint-plugin-react-hooks';
+import tailwindPlugin from 'eslint-plugin-tailwindcss';
 
 export default tseslint.config(
   {
@@ -13,6 +14,7 @@ export default tseslint.config(
       ...tseslint.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
       ...tseslint.configs.stylisticTypeChecked,
+      ...tailwindPlugin.configs['flat/recommended'],
     ],
     rules: {
       ...reactPlugin.configs['jsx-runtime'].rules,
@@ -46,5 +48,11 @@ export default tseslint.config(
   {
     linterOptions: { reportUnusedDisableDirectives: true },
     languageOptions: { parserOptions: { projectService: true } },
+    settings: {
+      tailwindcss: {
+        callees: ['tv'],
+        ignoredKeys: ['responsiveVariants'],
+      },
+    },
   },
 );
