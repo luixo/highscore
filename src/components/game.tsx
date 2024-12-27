@@ -29,7 +29,7 @@ export const Game: FC<{
         ) : null}
       </CardHeader>
       <Divider />
-      <CardBody className="max-h-[220px]">
+      <CardBody className="max-h-[220px] px-2">
         <Scores game={game} />
       </CardBody>
     </Card>
