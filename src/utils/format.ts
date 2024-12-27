@@ -9,7 +9,7 @@ const formatScoreWith = (
   score: number,
 ) => {
   if (scoreFormat === 'Time') {
-    return formatDuration(score * 1000);
+    return formatDuration(score * 1000, { ms: true }).slice(0, -1);
   }
   return score.toString();
 };
