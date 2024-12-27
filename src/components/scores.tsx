@@ -142,6 +142,73 @@ const ChangePlayerScoreModal: FC<{
   );
 };
 
+const RecordInfoModal: FC<{
+  record: PackedScore | undefined;
+  onClose: () => void;
+}> = ({ record, onClose }) => {
+  return (
+    <Modal isOpen={Boolean(record)} onOpenChange={onClose}>
+      <ModalContent>
+        <ModalHeader>Информация о достижении</ModalHeader>
+        <ModalBody className="w-full">
+          <Table>
+            <TableHeader
+              columns={[
+                {
+                  key: 'score',
+                  label: 'Очки',
+                },
+                {
+                  key: 'playerName',
+                  label: 'Имя игрока',
+                },
+                {
+                  key: 'createdAt',
+                  label: 'Первый результат',
+                },
+                {
+                  key: 'updatedAt',
+                  label: 'Последний результат',
+                },
+                {
+                  key: 'moderator',
+                  label: 'Поставил',
+                },
+              ]}
+            >
+              {(column) => (
+                <TableColumn key={column.key}>{column.label}</TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              items={record?.players ?? []}
+              emptyContent="Результатов пока нет, сыграй в эту игру!"
+            >
+              {(player) => (
+                <TableRow key={player.score}>
+                  {(columnKey) => {
+                    // @ts-expect-error We don't care much
+                    const value = player[columnKey as keyof player];
+                    return (
+                      <TableCell className="px-2">
+                        {value instanceof Date
+                          ? value.toLocaleTimeString()
+                          : typeof value === 'object'
+                            ? value.name
+                            : String(value)}
+                      </TableCell>
+                    );
+                  }}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
+
 type PackedScore = {
   score: number;
   index: number;
@@ -231,10 +298,17 @@ export const Scores: FC<{
     name: string;
     score: number;
   }>();
+  const [showInfoRecord, setShowInfoRecord] = useState<PackedScore>();
   const renderCell = useCallback(
     (packedScore: PackedScore, columnKey: React.Key) => {
       switch (columnKey) {
         case 'medal':
+          const onClick = () => {
+            if (moderatorStatus !== 'Admin') {
+              return;
+            }
+            setShowInfoRecord(packedScore);
+          };
           if (packedScore.index < 3) {
             return (
               <CiMedal
@@ -246,10 +320,11 @@ export const Scores: FC<{
                       ? 'silver'
                       : 'saddlebrown'
                 }
+                onClick={onClick}
               />
             );
           } else {
-            return null;
+            return <div onClick={onClick}></div>;
           }
         case 'names':
           return (
@@ -407,6 +482,10 @@ export const Scores: FC<{
             gameId={game.id}
             player={editPlayerScoreModal}
             onClose={() => setEditPlayerScoreModal(undefined)}
+          />
+          <RecordInfoModal
+            record={showInfoRecord}
+            onClose={() => setShowInfoRecord(undefined)}
           />
         </>
       );

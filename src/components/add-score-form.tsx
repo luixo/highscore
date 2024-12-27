@@ -123,15 +123,7 @@ export const AddScoreForm: FC = () => {
           {...form.register('score')}
           label={getInputLabel(selectedGame?.formatters)}
           type="number"
-          placeholder={
-            selectedGame
-              ? formatScore(
-                  9999,
-                  selectedGame.formatScore ?? undefined,
-                  selectedGame.formatters,
-                )
-              : undefined
-          }
+          placeholder="74"
           errorMessage={form.formState.errors.score?.message?.toString()}
           isInvalid={Boolean(form.formState.errors.score?.message)}
         />
