@@ -24,6 +24,7 @@ import { useModeratorStatus } from '~/hooks/use-moderator-status';
 import { formatScore } from '~/utils/format';
 import { RemoveButton } from '~/components/remove-button';
 import { toast } from 'react-hot-toast';
+import { useIntervalEffect } from '@react-hookz/web';
 
 const columns = [{ key: 'medal' }, { key: 'names' }, { key: 'score' }];
 const moderatorColumns = [...columns, { key: 'actions' }];
@@ -209,84 +210,56 @@ const RecordInfoModal: FC<{
   );
 };
 
-type PackedScore = {
-  score: number;
-  index: number;
-  players: inferProcedureOutput<AppRouter['scores']['list']>;
+const getColor = (delta: number) => {
+  if (delta < 15 * 1000) {
+    return 'bg-green-500';
+  } else if (delta < 45 * 1000) {
+    return 'bg-green-400';
+  } else if (delta < 75 * 1000) {
+    return 'bg-green-300';
+  } else if (delta < 120 * 1000) {
+    return 'bg-green-200';
+  } else if (delta < 200 * 1000) {
+    return 'bg-green-100';
+  } else if (delta < 300 * 1000) {
+    return 'bg-green-50';
+  }
+  return;
 };
 
-export const Scores: FC<{
+const ScoreBoard: FC<{
+  rawData: inferProcedureOutput<AppRouter['scores']['list']>;
   game: inferProcedureOutput<AppRouter['games']['list']>[number];
-}> = ({ game }) => {
-  const trpcUtils = trpc.useUtils();
-  const scoresQuery = trpc.scores.list.useQuery({ gameId: game.id });
-  usePusher('score:added', ({ score: newScore, gameId: scoreGameId }) => {
-    if (scoreGameId !== game.id) {
-      return;
+}> = ({ game, rawData }) => {
+  const data = [...rawData].sort((a, b) => {
+    if (game.sortDirection === 'Desc') {
+      return b.score - a.score;
+    } else {
+      return a.score - b.score;
     }
-    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
-      if (!prevData) {
-        return;
-      }
-      const matchedIndex = prevData.findIndex(
-        (element) =>
-          element.playerName.toLowerCase() ===
-          newScore.playerName.toLowerCase(),
-      );
-      if (matchedIndex === -1) {
-        return [...prevData, newScore];
-      }
+  });
+  const packedData = data.reduce<PackedScore[]>((acc, element) => {
+    const lastElement = acc.pop();
+    if (!lastElement) {
+      return [{ index: 0, score: element.score, players: [element] }];
+    }
+    if (lastElement.score !== element.score) {
       return [
-        ...prevData.slice(0, matchedIndex),
-        newScore,
-        ...prevData.slice(matchedIndex + 1),
+        ...acc,
+        lastElement,
+        { index: acc.length + 1, score: element.score, players: [element] },
       ];
-    });
-  });
-  usePusher('score:removed', ({ playerName, gameId: scoreGameId }) => {
-    if (scoreGameId !== game.id) {
-      return;
     }
-    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
-      if (!prevData) {
-        return;
-      }
-      return prevData.filter(
-        (element) =>
-          element.playerName.toLowerCase() !== playerName.toLowerCase(),
-      );
-    });
-  });
-  usePusher(
-    'score:updated',
-    ({ playerName, gameId: scoreGameId, updateObject }) => {
-      if (scoreGameId !== game.id) {
-        return;
-      }
-      trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
-        if (!prevData) {
-          return;
-        }
-        const matchedIndex = prevData.findIndex(
-          (element) =>
-            element.playerName.toLowerCase() === playerName.toLowerCase(),
-        );
-        if (matchedIndex === -1) {
-          return prevData;
-        }
-        return [
-          ...prevData.slice(0, matchedIndex),
-          {
-            ...prevData[matchedIndex],
-            ...(updateObject.type === 'playerName'
-              ? { playerName: updateObject.playerName }
-              : { score: updateObject.score }),
-          },
-          ...prevData.slice(matchedIndex + 1),
-        ];
-      });
-    },
-  );
+    return [
+      ...acc,
+      { ...lastElement, players: [...lastElement.players, element] },
+    ];
+  }, []);
+  const [now, setNow] = useState(Date.now());
+  useIntervalEffect(() => {
+    setNow(Date.now());
+  }, 1000);
+
   const moderatorStatus = useModeratorStatus();
   const removeScoreMutation = trpc.scores.remove.useMutation({
     onSuccess: (_result, variables) => {
@@ -311,17 +284,20 @@ export const Scores: FC<{
           };
           if (packedScore.index < 3) {
             return (
-              <CiMedal
-                size={20}
-                color={
-                  packedScore.index === 0
-                    ? 'gold'
-                    : packedScore.index === 1
-                      ? 'silver'
-                      : 'saddlebrown'
-                }
-                onClick={onClick}
-              />
+              <div className="flex size-6 items-center justify-center rounded-full bg-white">
+                <CiMedal
+                  size={20}
+                  color={
+                    packedScore.index === 0
+                      ? 'gold'
+                      : packedScore.index === 1
+                        ? 'silver'
+                        : 'saddlebrown'
+                  }
+                  onClick={onClick}
+                  className="stroke-1"
+                />
+              </div>
             );
           } else {
             return <div onClick={onClick}></div>;
@@ -412,82 +388,148 @@ export const Scores: FC<{
       removeScoreMutation,
     ],
   );
+  return (
+    <>
+      <Table
+        hideHeader
+        removeWrapper
+        isStriped
+        isCompact
+        classNames={{
+          tr: 'border-b last:border-none',
+        }}
+      >
+        <TableHeader columns={moderatorStatus ? moderatorColumns : columns}>
+          {(column) => <TableColumn key={column.key}>{column.key}</TableColumn>}
+        </TableHeader>
+        <TableBody
+          items={packedData}
+          emptyContent="Результатов пока нет, сыграй в эту игру!"
+        >
+          {(item) => {
+            const maxUpdatedAt = item.players.reduce(
+              (acc, player) => Math.max(player.updatedAt.valueOf(), acc),
+              0,
+            );
+            return (
+              <TableRow
+                key={item.score}
+                className={['transition-colors', getColor(now - maxUpdatedAt)]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
+                {(columnKey) => (
+                  <TableCell className="px-2 first:rounded-l-lg last:rounded-r-lg">
+                    {renderCell(item, columnKey)}
+                  </TableCell>
+                )}
+              </TableRow>
+            );
+          }}
+        </TableBody>
+      </Table>
+      <RenamePlayerModal
+        gameId={game.id}
+        playerName={editPlayerNameModal}
+        onClose={() => setEditPlayerNameModal(undefined)}
+      />
+      <ChangePlayerScoreModal
+        gameId={game.id}
+        player={editPlayerScoreModal}
+        onClose={() => setEditPlayerScoreModal(undefined)}
+      />
+      <RecordInfoModal
+        record={showInfoRecord}
+        onClose={() => setShowInfoRecord(undefined)}
+      />
+    </>
+  );
+};
+
+type PackedScore = {
+  score: number;
+  index: number;
+  players: inferProcedureOutput<AppRouter['scores']['list']>;
+};
+
+export const Scores: FC<{
+  game: inferProcedureOutput<AppRouter['games']['list']>[number];
+}> = ({ game }) => {
+  const trpcUtils = trpc.useUtils();
+  const scoresQuery = trpc.scores.list.useQuery({ gameId: game.id });
+  usePusher('score:added', ({ score: newScore, gameId: scoreGameId }) => {
+    if (scoreGameId !== game.id) {
+      return;
+    }
+    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
+      if (!prevData) {
+        return;
+      }
+      const matchedIndex = prevData.findIndex(
+        (element) =>
+          element.playerName.toLowerCase() ===
+          newScore.playerName.toLowerCase(),
+      );
+      if (matchedIndex === -1) {
+        return [...prevData, newScore];
+      }
+      return [
+        ...prevData.slice(0, matchedIndex),
+        newScore,
+        ...prevData.slice(matchedIndex + 1),
+      ];
+    });
+  });
+  usePusher('score:removed', ({ playerName, gameId: scoreGameId }) => {
+    if (scoreGameId !== game.id) {
+      return;
+    }
+    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
+      if (!prevData) {
+        return;
+      }
+      return prevData.filter(
+        (element) =>
+          element.playerName.toLowerCase() !== playerName.toLowerCase(),
+      );
+    });
+  });
+  usePusher(
+    'score:updated',
+    ({ playerName, gameId: scoreGameId, updateObject }) => {
+      if (scoreGameId !== game.id) {
+        return;
+      }
+      trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
+        if (!prevData) {
+          return;
+        }
+        const matchedIndex = prevData.findIndex(
+          (element) =>
+            element.playerName.toLowerCase() === playerName.toLowerCase(),
+        );
+        if (matchedIndex === -1) {
+          return prevData;
+        }
+        return [
+          ...prevData.slice(0, matchedIndex),
+          {
+            ...prevData[matchedIndex],
+            ...(updateObject.type === 'playerName'
+              ? { playerName: updateObject.playerName }
+              : { score: updateObject.score }),
+          },
+          ...prevData.slice(matchedIndex + 1),
+        ];
+      });
+    },
+  );
   switch (scoresQuery.status) {
     case 'pending':
       return <Spinner />;
     case 'error':
       return <Button color="warning">{scoresQuery.error.message}</Button>;
     case 'success':
-      const data = [...scoresQuery.data].sort((a, b) => {
-        if (game.sortDirection === 'Desc') {
-          return b.score - a.score;
-        } else {
-          return a.score - b.score;
-        }
-      });
-      const packedData = data.reduce<PackedScore[]>((acc, element) => {
-        const lastElement = acc.pop();
-        if (!lastElement) {
-          return [{ index: 0, score: element.score, players: [element] }];
-        }
-        if (lastElement.score !== element.score) {
-          return [
-            ...acc,
-            lastElement,
-            { index: acc.length + 1, score: element.score, players: [element] },
-          ];
-        }
-        return [
-          ...acc,
-          { ...lastElement, players: [...lastElement.players, element] },
-        ];
-      }, []);
-      return (
-        <>
-          <Table
-            hideHeader
-            removeWrapper
-            isStriped
-            isCompact
-            classNames={{
-              tr: 'border-b last:border-none',
-            }}
-          >
-            <TableHeader columns={moderatorStatus ? moderatorColumns : columns}>
-              {(column) => (
-                <TableColumn key={column.key}>{column.key}</TableColumn>
-              )}
-            </TableHeader>
-            <TableBody
-              items={packedData}
-              emptyContent="Результатов пока нет, сыграй в эту игру!"
-            >
-              {(item) => (
-                <TableRow key={item.score}>
-                  {(columnKey) => (
-                    <TableCell className="px-2">
-                      {renderCell(item, columnKey)}
-                    </TableCell>
-                  )}
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          <RenamePlayerModal
-            gameId={game.id}
-            playerName={editPlayerNameModal}
-            onClose={() => setEditPlayerNameModal(undefined)}
-          />
-          <ChangePlayerScoreModal
-            gameId={game.id}
-            player={editPlayerScoreModal}
-            onClose={() => setEditPlayerScoreModal(undefined)}
-          />
-          <RecordInfoModal
-            record={showInfoRecord}
-            onClose={() => setShowInfoRecord(undefined)}
-          />
-        </>
-      );
+      return <ScoreBoard game={game} rawData={scoresQuery.data} />;
   }
 };

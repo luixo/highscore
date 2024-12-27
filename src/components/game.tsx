@@ -21,7 +21,11 @@ export const Game: FC<{
   return (
     <Card className="min-h-[250px] w-[240px] max-w-[240px]">
       <CardHeader className="relative flex h-[50px] justify-end gap-2 overflow-hidden">
-        <img className="absolute inset-0 -z-20 w-full" src={game.logoUrl} />
+        <img
+          className="absolute inset-0 -z-20 w-full"
+          src={game.logoUrl}
+          alt={game.title}
+        />
         {moderatorStatus === 'Admin' ? (
           <RemoveButton
             onClick={() => removeGameMutation.mutate({ id: game.id })}

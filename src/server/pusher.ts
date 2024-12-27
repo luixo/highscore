@@ -1,4 +1,5 @@
 import Pusher from 'pusher';
+import SuperJSON from 'superjson';
 import { env } from '~/server/env';
 import { getChannelName, PusherMapping } from '~/utils/pusher';
 
@@ -13,4 +14,8 @@ export const pushEvent = <K extends keyof PusherMapping>(
   event: K,
   data: PusherMapping[K],
 ) =>
-  pusher.trigger(getChannelName(), event, { timestamp: Date.now(), ...data });
+  pusher.trigger(
+    getChannelName(),
+    event,
+    SuperJSON.serialize({ timestamp: Date.now(), ...data }),
+  );

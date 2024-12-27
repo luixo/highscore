@@ -6,7 +6,6 @@ import { AllTabs } from '~/components/all-tabs';
 import { CiRedo } from 'react-icons/ci';
 import { useCallback } from 'react';
 import { Button } from '@nextui-org/react';
-import { GameType } from '~/components/game-type';
 
 const IndexPage: NextPageWithLayout = () => {
   const trpcUtils = trpc.useUtils();
@@ -53,20 +52,6 @@ const IndexPage: NextPageWithLayout = () => {
         <h1 className="text-[clamp(1rem,10vw,2rem)] font-semibold tracking-tight sm:text-[clamp(1rem,10vw,3rem)] lg:text-5xl">
           Список рекордов
         </h1>
-        <div className="flex flex-col gap-2 lg:flex-row">
-          <GameType
-            src="https://storage.yandexcloud.net/highscore/s_timer.png"
-            description="Время игры"
-          />
-          <GameType
-            src="https://storage.yandexcloud.net/highscore/s_players.png"
-            description="Количество игроков"
-          />
-          <GameType
-            src="https://storage.yandexcloud.net/highscore/s_sweatness.png"
-            description="Потность"
-          />
-        </div>
         <div className="flex gap-2">
           <Button color="warning" variant="bordered" isIconOnly>
             <CiRedo onClick={invalidateQueries} size={20} />

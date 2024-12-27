@@ -2,6 +2,8 @@ import React from 'react';
 
 import Pusher from 'pusher-js';
 import { getChannelName, PusherMapping } from '~/utils/pusher';
+import SuperJSON from 'superjson';
+import { SuperJSONResult } from 'superjson/dist/types';
 
 let pusherInstance: Pusher | undefined;
 
@@ -32,7 +34,7 @@ export const usePusher = <K extends keyof PusherMapping>(
         return;
       }
       timestamps[event] = timestamp;
-      onDataRaw(data as unknown as PusherMapping[K]);
+      onDataRaw(SuperJSON.deserialize(data as unknown as SuperJSONResult));
     };
     channel.bind(event, onData);
     return () => {
