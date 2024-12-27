@@ -71,7 +71,7 @@ export const formatScore = (
 
 export const getInputLabel = (formatters?: JsonValue) => {
   if (!formatters || typeof formatters !== 'object') {
-    return 'Очков';
+    return 'Очков / Секунд';
   }
   if ('inputLabel' in formatters && typeof formatters.inputLabel === 'string') {
     return formatters.inputLabel;

@@ -1,6 +1,6 @@
 import { unstable_httpBatchStreamLink, loggerLink } from '@trpc/client';
 import { createTRPCNext } from '@trpc/next';
-import { MutationCache } from '@tanstack/react-query';
+import { hashKey, MutationCache } from '@tanstack/react-query';
 
 import { toast } from 'react-hot-toast';
 
@@ -101,7 +101,19 @@ export const trpc = createTRPCNext<AppRouter, SSRContext>({
           },
         }),
         defaultOptions: {
-          queries: { retry: 0, staleTime: 10 * 1000 },
+          queries: {
+            retry: 0,
+            refetchInterval: (query) => {
+              const queryKey = query.queryKey;
+              if (
+                hashKey(queryKey) ===
+                hashKey([['moderator', 'get'], { type: 'query' }])
+              ) {
+                return false;
+              }
+              return 60 * 1000;
+            },
+          },
         },
       },
     };

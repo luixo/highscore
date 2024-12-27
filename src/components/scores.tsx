@@ -23,6 +23,7 @@ import { usePusher } from '~/hooks/use-pusher';
 import { useModeratorStatus } from '~/hooks/use-moderator-status';
 import { formatScore } from '~/utils/format';
 import { RemoveButton } from '~/components/remove-button';
+import { toast } from 'react-hot-toast';
 
 const columns = [{ key: 'medal' }, { key: 'names' }, { key: 'score' }];
 const moderatorColumns = [...columns, { key: 'actions' }];
@@ -38,7 +39,13 @@ const RenamePlayerModal: FC<{
       setLocalName(playerName);
     }
   }, [playerName]);
-  const updateScoreMutation = trpc.scores.update.useMutation();
+  const updateScoreMutation = trpc.scores.update.useMutation({
+    onSuccess: (_result, variables) => {
+      toast.success(
+        `Рекорд игрока "${variables.playerName}" обновлен: "${JSON.stringify(variables.updateObject)}"`,
+      );
+    },
+  });
   const saveLocalPlayerName = useCallback(() => {
     if (!playerName || !localName) {
       return;
@@ -88,7 +95,13 @@ const ChangePlayerScoreModal: FC<{
       setLocalScore(player.score);
     }
   }, [player]);
-  const updateScoreMutation = trpc.scores.update.useMutation();
+  const updateScoreMutation = trpc.scores.update.useMutation({
+    onSuccess: (_result, variables) => {
+      toast.success(
+        `Рекорд игрока "${variables.playerName}" обновлен: "${JSON.stringify(variables.updateObject)}"`,
+      );
+    },
+  });
   const saveLocalPlayerName = useCallback(() => {
     if (!player || !localScore) {
       return;
@@ -208,7 +221,11 @@ export const Scores: FC<{
     },
   );
   const moderatorStatus = useModeratorStatus();
-  const removeScoreMutation = trpc.scores.remove.useMutation();
+  const removeScoreMutation = trpc.scores.remove.useMutation({
+    onSuccess: (_result, variables) => {
+      toast.success(`Рекорд игрока "${variables.playerName}" удален.`);
+    },
+  });
   const [editPlayerNameModal, setEditPlayerNameModal] = useState<string>();
   const [editPlayerScoreModal, setEditPlayerScoreModal] = useState<{
     name: string;

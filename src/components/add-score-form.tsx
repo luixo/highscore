@@ -36,12 +36,20 @@ export const AddScoreForm: FC = () => {
     mode: 'onChange',
   });
   const addScoreMutation = trpc.scores.upsert.useMutation({
-    onSuccess: (result, variables) => {
+    onSuccess: (response, variables) => {
       const gamesCache = trpcUtils.games.list.getData();
-      const matchedGame = gamesCache?.find((game) => game.id === result.gameId);
-      toast.success(
-        `Результат ${formatScore(result.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)} для игрока "${variables.playerName}" добавлен`,
+      const matchedGame = gamesCache?.find(
+        (game) => game.id === variables.gameId,
       );
+      if (response.type === 'old') {
+        toast.error(
+          `Результат "${formatScore(variables.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}" для игрока "${variables.playerName}" не был добавлен, есть результат лучше: "${formatScore(response.result.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}"`,
+        );
+      } else {
+        toast.success(
+          `Результат "${formatScore(response.result.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}" для игрока "${variables.playerName}" добавлен`,
+        );
+      }
       form.reset();
     },
   });

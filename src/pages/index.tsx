@@ -3,6 +3,9 @@ import type { NextPageWithLayout } from './_app';
 import { LoginModal } from '~/components/login-modal';
 import { usePusher } from '~/hooks/use-pusher';
 import { AllTabs } from '~/components/all-tabs';
+import { CiRedo } from 'react-icons/ci';
+import { useCallback } from 'react';
+import { Button } from '@nextui-org/react';
 
 const IndexPage: NextPageWithLayout = () => {
   const trpcUtils = trpc.useUtils();
@@ -39,13 +42,22 @@ const IndexPage: NextPageWithLayout = () => {
     });
   });
 
+  const invalidateQueries = useCallback(() => {
+    trpcUtils.invalidate();
+  }, [trpcUtils]);
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <h1 className="text-[clamp(1rem,10vw,2rem)] font-semibold tracking-tight sm:text-[clamp(1rem,10vw,3rem)] lg:text-5xl">
           Список рекордов
         </h1>
-        <LoginModal />
+        <div className="flex gap-2">
+          <Button color="warning" variant="bordered" isIconOnly>
+            <CiRedo onClick={invalidateQueries} size={20} />
+          </Button>
+          <LoginModal />
+        </div>
       </div>
       <div>
         <AllTabs />

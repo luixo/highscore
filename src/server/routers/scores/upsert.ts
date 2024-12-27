@@ -13,6 +13,22 @@ export const procedure = protectedProcedure
       score: scoreSchema,
     }),
   )
+  .output(
+    z.discriminatedUnion('type', [
+      z.strictObject({
+        type: z.literal('old'),
+        result: z.object({
+          score: scoreSchema,
+        }),
+      }),
+      z.strictObject({
+        type: z.literal('new'),
+        result: z.object({
+          score: scoreSchema,
+        }),
+      }),
+    ]),
+  )
   .mutation(async ({ input: { gameId, playerName, score }, ctx }) => {
     let playerNameInsensitive = playerName;
     const matchedPlayer = await prisma.score.findFirst({
@@ -25,10 +41,29 @@ export const procedure = protectedProcedure
       },
       select: {
         playerName: true,
+        score: true,
+        game: true,
       },
     });
     if (matchedPlayer) {
       playerNameInsensitive = matchedPlayer.playerName;
+      if (matchedPlayer.score) {
+        if (matchedPlayer.game.sortDirection === 'Asc') {
+          if (matchedPlayer.score <= score) {
+            return {
+              type: 'old',
+              result: { score: matchedPlayer.score },
+            };
+          }
+        } else {
+          if (matchedPlayer.score >= score) {
+            return {
+              type: 'old',
+              result: { score: matchedPlayer.score },
+            };
+          }
+        }
+      }
     }
     const result = await prisma.score.upsert({
       where: {
@@ -48,5 +83,5 @@ export const procedure = protectedProcedure
       },
     });
     await pushEvent('score:added', { gameId, score: result });
-    return result;
+    return { type: 'new', result: { score: result.score } };
   });
