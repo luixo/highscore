@@ -5,11 +5,8 @@ export const gameTitleSchema = z.string().min(1).max(64);
 const stringWithTemplateSchema = z
   .string()
   .min(1)
-  .refine((format) => {
-    if (!format.includes('%s')) {
-      return 'Format should include "%s"';
-    }
-    return true;
+  .refine((format) => format.includes('%s'), {
+    message: 'Format should include "%s"',
   });
 
 export const formattersSchema = z.strictObject({
@@ -44,5 +41,16 @@ export const gameUpdateObject = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('title'),
     title: gameTitleSchema,
+  }),
+]);
+
+export const scoreUpdateObject = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('playerName'),
+    playerName: playerNameSchema,
+  }),
+  z.object({
+    type: z.literal('score'),
+    score: scoreSchema,
   }),
 ]);

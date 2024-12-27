@@ -1,5 +1,10 @@
 import {
   Button,
+  Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
   Spinner,
   Table,
   TableBody,
@@ -10,7 +15,7 @@ import {
 } from '@nextui-org/react';
 import { CiMedal } from 'react-icons/ci';
 import { inferProcedureOutput } from '@trpc/server';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useEffect, useState } from 'react';
 
 import type { AppRouter } from '~/server/routers/_app';
 import { trpc } from '~/utils/trpc';
@@ -21,6 +26,108 @@ import { RemoveButton } from '~/components/remove-button';
 
 const columns = [{ key: 'medal' }, { key: 'names' }, { key: 'score' }];
 const moderatorColumns = [...columns, { key: 'actions' }];
+
+const RenamePlayerModal: FC<{
+  gameId: string;
+  playerName: string | undefined;
+  onClose: () => void;
+}> = ({ gameId, playerName, onClose }) => {
+  const [localName, setLocalName] = useState<string>();
+  useEffect(() => {
+    if (playerName) {
+      setLocalName(playerName);
+    }
+  }, [playerName]);
+  const updateScoreMutation = trpc.scores.update.useMutation();
+  const saveLocalPlayerName = useCallback(() => {
+    if (!playerName || !localName) {
+      return;
+    }
+    onClose();
+    updateScoreMutation.mutate({
+      playerName: playerName,
+      gameId,
+      updateObject: {
+        type: 'playerName',
+        playerName: localName,
+      },
+    });
+  }, [playerName, localName, onClose, updateScoreMutation, gameId]);
+  return (
+    <Modal isOpen={Boolean(playerName)} onOpenChange={onClose}>
+      <ModalContent>
+        <ModalHeader>Переименовать игрока "{playerName}"</ModalHeader>
+        <ModalBody className="w-full">
+          <Input value={localName} onValueChange={setLocalName} />
+          <Button
+            color="primary"
+            onPress={saveLocalPlayerName}
+            isDisabled={!localName}
+          >
+            Сохранить
+          </Button>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
+
+const ChangePlayerScoreModal: FC<{
+  gameId: string;
+  player:
+    | {
+        name: string;
+        score: number;
+      }
+    | undefined;
+  onClose: () => void;
+}> = ({ gameId, player, onClose }) => {
+  const [localScore, setLocalScore] = useState<number>(player?.score ?? 0);
+  useEffect(() => {
+    if (player) {
+      setLocalScore(player.score);
+    }
+  }, [player]);
+  const updateScoreMutation = trpc.scores.update.useMutation();
+  const saveLocalPlayerName = useCallback(() => {
+    if (!player || !localScore) {
+      return;
+    }
+    onClose();
+    updateScoreMutation.mutate({
+      playerName: player.name,
+      gameId,
+      updateObject: {
+        type: 'score',
+        score: localScore,
+      },
+    });
+  }, [player, localScore, onClose, updateScoreMutation, gameId]);
+  if (!player) {
+    return null;
+  }
+  return (
+    <Modal isOpen onOpenChange={onClose}>
+      <ModalContent>
+        <ModalHeader>Изменить очки игрока "{player.name}"</ModalHeader>
+        <ModalBody className="w-full">
+          <Input
+            value={localScore.toString()}
+            onValueChange={(value) => setLocalScore(Number(value))}
+            type="number"
+          />
+          <Button
+            color="primary"
+            onPress={saveLocalPlayerName}
+            isDisabled={!localScore}
+          >
+            Сохранить
+          </Button>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
 
 type PackedScore = {
   score: number;
@@ -70,8 +177,43 @@ export const Scores: FC<{
       );
     });
   });
+  usePusher(
+    'score:updated',
+    ({ playerName, gameId: scoreGameId, updateObject }) => {
+      if (scoreGameId !== game.id) {
+        return;
+      }
+      trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
+        if (!prevData) {
+          return;
+        }
+        const matchedIndex = prevData.findIndex(
+          (element) =>
+            element.playerName.toLowerCase() === playerName.toLowerCase(),
+        );
+        if (matchedIndex === -1) {
+          return prevData;
+        }
+        return [
+          ...prevData.slice(0, matchedIndex),
+          {
+            ...prevData[matchedIndex],
+            ...(updateObject.type === 'playerName'
+              ? { playerName: updateObject.playerName }
+              : { score: updateObject.score }),
+          },
+          ...prevData.slice(matchedIndex + 1),
+        ];
+      });
+    },
+  );
   const moderatorStatus = useModeratorStatus();
   const removeScoreMutation = trpc.scores.remove.useMutation();
+  const [editPlayerNameModal, setEditPlayerNameModal] = useState<string>();
+  const [editPlayerScoreModal, setEditPlayerScoreModal] = useState<{
+    name: string;
+    score: number;
+  }>();
   const renderCell = useCallback(
     (packedScore: PackedScore, columnKey: React.Key) => {
       switch (columnKey) {
@@ -96,9 +238,20 @@ export const Scores: FC<{
           return (
             <div className="flex flex-col">
               {packedScore.players.map((player, index, players) => (
-                <span>
-                  {player.playerName}
-                  {index === players.length - 1 ? '' : ','}
+                <span className="inline-flex gap-1">
+                  <div
+                    onClick={() => {
+                      if (moderatorStatus !== 'Admin') {
+                        return;
+                      }
+                      setEditPlayerNameModal(player.playerName);
+                    }}
+                    className={
+                      moderatorStatus === 'Admin' ? 'cursor-pointer' : undefined
+                    }
+                  >
+                    {player.playerName}
+                  </div>
                   {packedScore.players.length !== 1 && moderatorStatus ? (
                     <RemoveButton
                       onClick={() =>
@@ -109,13 +262,33 @@ export const Scores: FC<{
                       }
                     />
                   ) : null}
+                  {index === players.length - 1 ? '' : ','}
                 </span>
               ))}
             </div>
           );
         case 'score':
+          const firstPlayer = packedScore.players[0];
           return (
-            <div>
+            <div
+              onClick={() => {
+                if (
+                  moderatorStatus !== 'Admin' ||
+                  packedScore.players.length !== 1
+                ) {
+                  return;
+                }
+                setEditPlayerScoreModal({
+                  name: firstPlayer.playerName,
+                  score: firstPlayer.score,
+                });
+              }}
+              className={
+                moderatorStatus !== 'Admin' || packedScore.players.length !== 1
+                  ? undefined
+                  : 'cursor-pointer'
+              }
+            >
               {formatScore(
                 packedScore.score,
                 game.formatScore ?? undefined,
@@ -178,33 +351,45 @@ export const Scores: FC<{
         ];
       }, []);
       return (
-        <Table
-          hideHeader
-          removeWrapper
-          isStriped
-          isCompact
-          classNames={{
-            tr: 'border-b last:border-none',
-          }}
-        >
-          <TableHeader columns={moderatorStatus ? moderatorColumns : columns}>
-            {(column) => (
-              <TableColumn key={column.key}>{column.key}</TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            items={packedData}
-            emptyContent="Результатов пока нет, сыграй в эту игру!"
+        <>
+          <Table
+            hideHeader
+            removeWrapper
+            isStriped
+            isCompact
+            classNames={{
+              tr: 'border-b last:border-none',
+            }}
           >
-            {(item) => (
-              <TableRow key={item.score}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            <TableHeader columns={moderatorStatus ? moderatorColumns : columns}>
+              {(column) => (
+                <TableColumn key={column.key}>{column.key}</TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              items={packedData}
+              emptyContent="Результатов пока нет, сыграй в эту игру!"
+            >
+              {(item) => (
+                <TableRow key={item.score}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          <RenamePlayerModal
+            gameId={game.id}
+            playerName={editPlayerNameModal}
+            onClose={() => setEditPlayerNameModal(undefined)}
+          />
+          <ChangePlayerScoreModal
+            gameId={game.id}
+            player={editPlayerScoreModal}
+            onClose={() => setEditPlayerScoreModal(undefined)}
+          />
+        </>
       );
   }
 };

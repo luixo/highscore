@@ -90,21 +90,21 @@ export const AddScoreForm: FC = () => {
   );
   return (
     <div className="flex flex-col items-center gap-3">
+      <h3 className="text-2xl font-semibold">Добавить результат</h3>
+      <Select
+        label="Игра"
+        placeholder="Выбери игру"
+        selectedKeys={gameId ? [gameId] : []}
+        variant="bordered"
+        onSelectionChange={onSelectionChange}
+      >
+        {games.map((game) => (
+          <SelectItem key={game.id} value={game.id}>
+            {game.title}
+          </SelectItem>
+        ))}
+      </Select>
       <Form onSubmit={form.handleSubmit(onSubmit, onError)} className="w-full">
-        <h3 className="text-2xl font-semibold">Добавить результат</h3>
-        <Select
-          label="Игра"
-          placeholder="Выбери игру"
-          selectedKeys={gameId ? [gameId] : []}
-          variant="bordered"
-          onSelectionChange={onSelectionChange}
-        >
-          {games.map((game) => (
-            <SelectItem key={game.id} value={game.id}>
-              {game.title}
-            </SelectItem>
-          ))}
-        </Select>
         <Input
           {...form.register('playerName')}
           label="Имя игрока"

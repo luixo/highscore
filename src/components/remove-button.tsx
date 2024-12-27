@@ -8,7 +8,7 @@ export const RemoveButton: FC<
     <CiCircleRemove
       className={[
         'text-danger',
-        isDisabled ? undefined : 'cursor-pointer',
+        isDisabled ? 'opacity-50' : 'cursor-pointer',
         className,
       ]
         .filter(Boolean)
