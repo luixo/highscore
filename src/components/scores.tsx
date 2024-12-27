@@ -390,7 +390,9 @@ export const Scores: FC<{
               {(item) => (
                 <TableRow key={item.score}>
                   {(columnKey) => (
-                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                    <TableCell className="px-1">
+                      {renderCell(item, columnKey)}
+                    </TableCell>
                   )}
                 </TableRow>
               )}
