@@ -7,6 +7,9 @@ import { pushEvent } from '~/server/pusher';
 export const procedure = adminProcedure
   .input(z.object({ id: gameIdSchema }))
   .mutation(async ({ input: { id } }) => {
+    await prisma.score.deleteMany({
+      where: { gameId: id },
+    });
     await prisma.game.delete({
       where: { id },
     });
