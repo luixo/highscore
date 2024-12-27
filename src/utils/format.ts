@@ -56,7 +56,7 @@ export const formatScore = (
     return formatScoreWith(scoreFormat, score);
   }
   const serializers = getSerializers(serializersRaw, scoreFormat);
-  if (score % 10 === 1 && score % 10 !== 11) {
+  if (score % 10 === 1 && score % 100 !== 11) {
     return serializers.one(score);
   } else if (
     score % 10 >= 2 &&
