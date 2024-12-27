@@ -8,6 +8,8 @@ export const procedure = publicProcedure.query(async () => {
       title: true,
       formatters: true,
       logoUrl: true,
+      sortDirection: true,
+      formatScore: true,
       createdAt: true,
       updatedAt: true,
     },

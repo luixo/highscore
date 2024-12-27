@@ -39,3 +39,13 @@ export const protectedProcedure = publicProcedure.use(async ({ ctx, next }) => {
     },
   });
 });
+
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (ctx.session.role !== 'Admin') {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'This procedure is only used by admin.',
+    });
+  }
+  return next();
+});

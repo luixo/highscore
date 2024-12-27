@@ -10,7 +10,7 @@
     "checkJs": true,
     "allowImportingTsExtensions": true,
 
-    "lib": ["dom", "dom.iterable", "ES2022"],
+    "lib": ["dom", "dom.iterable", "ES2022", "ESNext"],
     "noEmit": true,
     "module": "Preserve",
     "moduleResolution": "bundler",

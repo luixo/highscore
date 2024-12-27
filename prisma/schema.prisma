@@ -16,6 +16,8 @@ model Game {
   scores Score[]
   logoUrl String
   formatters Json
+  sortDirection Direction @default(Desc)
+  formatScore ScoreFormat?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -50,4 +52,13 @@ model Score {
 enum ModeratorRole {
   Moderator
   Admin
+}
+
+enum Direction {
+  Asc
+  Desc
+}
+
+enum ScoreFormat {
+  Time
 }

@@ -74,14 +74,14 @@ export const LoginModal: FC = () => {
             <ModalFooter className="w-full">
               <Button
                 color="primary"
-                disabled={localModerator.length === 0}
+                isDisabled={localModerator.length === 0}
                 type="submit"
               >
                 Сохранить
               </Button>
               <Button
                 color="danger"
-                disabled={!moderator}
+                isDisabled={!moderator}
                 onPress={() => {
                   setModerator(undefined);
                   setLocalModerator('');

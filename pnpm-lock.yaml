@@ -47,6 +47,9 @@ importers:
       cookies-next:
         specifier: ^5.0.2
         version: 5.0.2(next@15.1.2(@playwright/test@1.49.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
+      format-duration:
+        specifier: ^3.0.2
+        version: 3.0.2
       framer-motion:
         specifier: ^11.15.0
         version: 11.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -2625,6 +2628,9 @@ packages:
   form-data@4.0.1:
     resolution: {integrity: sha512-tzN8e4TX8+kkxGPK8D5u0FNmjPUjw3lwC9lSLxxoB/+GtsJG91CO8bSWy73APlgAZzZbXEYZJuxjkHH2w+Ezhw==}
     engines: {node: '>= 6'}
+
+  format-duration@3.0.2:
+    resolution: {integrity: sha512-pKzJDSRgK2lqAiPW3uizDaIJaJnataZclsahz25UMwfdryBGDa+1HlbXGjzpMvX/2kMh4O0sNevFXKaEfCjHsA==}
 
   fraction.js@4.3.7:
     resolution: {integrity: sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==}
@@ -7234,6 +7240,8 @@ snapshots:
       asynckit: 0.4.0
       combined-stream: 1.0.8
       mime-types: 2.1.35
+
+  format-duration@3.0.2: {}
 
   fraction.js@4.3.7: {}
 

@@ -44,10 +44,8 @@ export const usePusher = <K extends keyof PusherMapping>(
       console.warn(`There is a double subscription to an event "${event}"`);
     }
     subscribed[event] = true;
-    console.log(`Subscribed to "${event}"`);
     const unsubscribe = subscribe();
     return () => {
-      console.log(`Unsubscribed from "${event}"`);
       subscribed[event] = false;
       unsubscribe();
     };

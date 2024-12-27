@@ -25,7 +25,7 @@ export const Game: FC<{
       </CardHeader>
       <Divider />
       <CardBody className="max-h-[220px]">
-        <Scores gameId={game.id} />
+        <Scores game={game} />
       </CardBody>
     </Card>
   );

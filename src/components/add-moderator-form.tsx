@@ -1,12 +1,12 @@
 import { FC, useCallback } from 'react';
-import { Form, Button, Input } from '@nextui-org/react';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { Form, Button, Input, Tooltip } from '@nextui-org/react';
+import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { moderatorNameSchema, moderatorKeySchema } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 import { toast } from 'react-hot-toast';
-import { useModeratorStatus } from '~/hooks/use-moderator-status';
+import { collectErrors } from '~/utils/form';
 
 const formSchema = z.strictObject({
   name: moderatorNameSchema,
@@ -16,6 +16,8 @@ const formSchema = z.strictObject({
 export const AddModeratorForm: FC = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+
+    mode: 'onChange',
   });
   const addModeratorMutation = trpc.moderator.add.useMutation({
     onSuccess: (result) => {
@@ -24,14 +26,15 @@ export const AddModeratorForm: FC = () => {
     },
   });
   const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(
-    (data) => {
-      addModeratorMutation.mutate({ name: data.name, key: data.key });
-    },
+    (data) => addModeratorMutation.mutate({ name: data.name, key: data.key }),
     [addModeratorMutation],
   );
-  const moderatorStatus = useModeratorStatus();
+  const onError = useCallback<SubmitErrorHandler<z.infer<typeof formSchema>>>(
+    (errors) => toast.error(collectErrors(errors).join('\n')),
+    [],
+  );
   return (
-    <Form onSubmit={form.handleSubmit(onSubmit)}>
+    <Form onSubmit={form.handleSubmit(onSubmit, onError)}>
       <h3 className="text-2xl font-semibold">Добавить модератора</h3>
       <Input
         {...form.register('name')}
@@ -45,14 +48,21 @@ export const AddModeratorForm: FC = () => {
         errorMessage={form.formState.errors.name?.message?.toString()}
         isInvalid={Boolean(form.formState.errors.name?.message)}
       />
-      <Button
-        type="submit"
-        color="primary"
-        className="self-end"
-        isDisabled={moderatorStatus !== 'Admin'}
+      <Tooltip
+        isDisabled={form.formState.isValid}
+        content={collectErrors(form.formState.errors)}
       >
-        Добавить
-      </Button>
+        <div>
+          <Button
+            type="submit"
+            color="primary"
+            className="self-end"
+            isDisabled={!form.formState.isValid}
+          >
+            Добавить
+          </Button>
+        </div>
+      </Tooltip>
     </Form>
   );
 };

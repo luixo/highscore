@@ -1,20 +1,49 @@
 import { JsonValue } from '@prisma/client/runtime/library';
 
+import formatDuration from 'format-duration';
+
+type ScoreFormat = 'Time';
+
+const formatScoreWith = (
+  scoreFormat: ScoreFormat | undefined,
+  score: number,
+) => {
+  if (scoreFormat === 'Time') {
+    return formatDuration(score);
+  }
+  return score.toString();
+};
+
 const getSerializer =
-  (serializers: Record<string, unknown>, key: string) => (value: number) => {
+  (
+    serializers: Record<string, unknown>,
+    scoreFormat: ScoreFormat | undefined,
+    key: string,
+  ) =>
+  (value: number) => {
     if (key in serializers && typeof serializers[key] === 'string') {
-      return serializers[key].replace('%s', value.toString());
+      return serializers[key].replace(
+        '%s',
+        formatScoreWith(scoreFormat, value),
+      );
     }
-    return value.toString();
+    return formatScoreWith(scoreFormat, value);
   };
 
-const getSerializers = (serializers: Record<string, unknown>) => ({
-  one: getSerializer(serializers, 'one'),
-  some: getSerializer(serializers, 'some'),
-  many: getSerializer(serializers, 'many'),
+const getSerializers = (
+  serializers: Record<string, unknown>,
+  scoreFormat: ScoreFormat | undefined,
+) => ({
+  one: getSerializer(serializers, scoreFormat, 'one'),
+  some: getSerializer(serializers, scoreFormat, 'some'),
+  many: getSerializer(serializers, scoreFormat, 'many'),
 });
 
-export const formatScore = (score: number, formatters?: JsonValue) => {
+export const formatScore = (
+  score: number,
+  scoreFormat: ScoreFormat | undefined,
+  formatters?: JsonValue,
+) => {
   const serializersRaw =
     typeof formatters === 'object' && formatters && 'serializers' in formatters
       ? formatters.serializers
@@ -24,9 +53,9 @@ export const formatScore = (score: number, formatters?: JsonValue) => {
     typeof serializersRaw !== 'object' ||
     Array.isArray(serializersRaw)
   ) {
-    return score.toString();
+    return formatScoreWith(scoreFormat, score);
   }
-  const serializers = getSerializers(serializersRaw);
+  const serializers = getSerializers(serializersRaw, scoreFormat);
   if (score % 10 === 1 && score % 10 !== 11) {
     return serializers.one(score);
   } else if (

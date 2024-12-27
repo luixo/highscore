@@ -29,16 +29,15 @@ type PackedScore = {
 };
 
 export const Scores: FC<{
-  gameId: string;
-}> = ({ gameId }) => {
+  game: inferProcedureOutput<AppRouter['games']['list']>[number];
+}> = ({ game }) => {
   const trpcUtils = trpc.useUtils();
-  const gamesQuery = trpc.games.list.useQuery();
-  const scoresQuery = trpc.scores.list.useQuery({ gameId });
+  const scoresQuery = trpc.scores.list.useQuery({ gameId: game.id });
   usePusher('score:added', ({ score: newScore, gameId: scoreGameId }) => {
-    if (scoreGameId !== gameId) {
+    if (scoreGameId !== game.id) {
       return;
     }
-    trpcUtils.scores.list.setData({ gameId }, (prevData) => {
+    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
       if (!prevData) {
         return;
       }
@@ -58,10 +57,10 @@ export const Scores: FC<{
     });
   });
   usePusher('score:removed', ({ playerName, gameId: scoreGameId }) => {
-    if (scoreGameId !== gameId) {
+    if (scoreGameId !== game.id) {
       return;
     }
-    trpcUtils.scores.list.setData({ gameId }, (prevData) => {
+    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
       if (!prevData) {
         return;
       }
@@ -104,7 +103,7 @@ export const Scores: FC<{
                     <RemoveButton
                       onClick={() =>
                         removeScoreMutation.mutate({
-                          gameId,
+                          gameId: game.id,
                           playerName: player.playerName,
                         })
                       }
@@ -115,11 +114,14 @@ export const Scores: FC<{
             </div>
           );
         case 'score':
-          const matchedGame = gamesQuery.data?.find(
-            (game) => game.id === gameId,
-          );
           return (
-            <div>{formatScore(packedScore.score, matchedGame?.formatters)}</div>
+            <div>
+              {formatScore(
+                packedScore.score,
+                game.formatScore ?? undefined,
+                game.formatters,
+              )}
+            </div>
           );
         case 'actions':
           return (
@@ -127,7 +129,7 @@ export const Scores: FC<{
               isDisabled={packedScore.players.length !== 1}
               onClick={() =>
                 removeScoreMutation.mutate({
-                  gameId,
+                  gameId: game.id,
                   playerName: packedScore.players[0].playerName,
                 })
               }
@@ -137,7 +139,13 @@ export const Scores: FC<{
           return null;
       }
     },
-    [gameId, gamesQuery.data, moderatorStatus, removeScoreMutation],
+    [
+      game.formatScore,
+      game.formatters,
+      game.id,
+      moderatorStatus,
+      removeScoreMutation,
+    ],
   );
   switch (scoresQuery.status) {
     case 'pending':
@@ -145,7 +153,13 @@ export const Scores: FC<{
     case 'error':
       return <Button color="warning">{scoresQuery.error.message}</Button>;
     case 'success':
-      const data = [...scoresQuery.data].sort((a, b) => b.score - a.score);
+      const data = [...scoresQuery.data].sort((a, b) => {
+        if (game.sortDirection === 'Desc') {
+          return b.score - a.score;
+        } else {
+          return a.score - b.score;
+        }
+      });
       const packedData = data.reduce<PackedScore[]>((acc, element) => {
         const lastElement = acc.pop();
         if (!lastElement) {

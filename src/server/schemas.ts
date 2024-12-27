@@ -25,6 +25,13 @@ export const gameIdSchema = z.string().uuid();
 
 export const logoUrlSchema = z.string().url();
 
+export const sortDirectionSchema = z.union([
+  z.literal('Desc'),
+  z.literal('Asc'),
+]);
+
+export const scoreFormatSchema = z.literal('Time');
+
 export const playerNameSchema = z.string().min(1).max(64);
 
 export const scoreSchema = z.coerce.number().positive();
