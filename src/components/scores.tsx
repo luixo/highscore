@@ -14,8 +14,9 @@ import {
   TableRow,
 } from '@nextui-org/react';
 import { CiMedal } from 'react-icons/ci';
-import { inferProcedureOutput } from '@trpc/server';
-import { FC, useCallback, useEffect, useState } from 'react';
+import type { inferProcedureOutput } from '@trpc/server';
+import type { FC } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { AppRouter } from '~/server/routers/_app';
 import { trpc } from '~/utils/trpc';
@@ -260,7 +261,7 @@ const ScoreBoard: FC<{
     setNow(Date.now());
   }, 1000);
 
-  const moderatorStatus = useModeratorStatus();
+  const moderatorStatus = useModeratorStatus({ eventId: game.eventId });
   const removeScoreMutation = trpc.scores.remove.useMutation({
     onSuccess: (_result, variables) => {
       toast.success(`Рекорд игрока "${variables.playerName}" удален.`);

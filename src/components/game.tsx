@@ -1,5 +1,5 @@
-import { FC } from 'react';
-import { inferProcedureOutput } from '@trpc/server';
+import type { FC } from 'react';
+import type { inferProcedureOutput } from '@trpc/server';
 
 import type { AppRouter } from '~/server/routers/_app';
 import { Scores } from '~/components/scores';
@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 export const Game: FC<{
   game: inferProcedureOutput<AppRouter['games']['list']>[number];
 }> = ({ game }) => {
-  const moderatorStatus = useModeratorStatus();
+  const moderatorStatus = useModeratorStatus({ eventId: game.eventId });
   const removeGameMutation = trpc.games.remove.useMutation({
     onSuccess: (_result, variables) => {
       toast.success(`Игра "${variables.id}" удалена.`);
@@ -28,7 +28,9 @@ export const Game: FC<{
         />
         {moderatorStatus === 'Admin' ? (
           <RemoveButton
-            onClick={() => removeGameMutation.mutate({ id: game.id })}
+            onClick={() =>
+              removeGameMutation.mutate({ eventId: game.eventId, id: game.id })
+            }
           />
         ) : null}
       </CardHeader>

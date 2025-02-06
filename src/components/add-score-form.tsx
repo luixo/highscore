@@ -1,17 +1,20 @@
-import { FC, useCallback, useEffect, useMemo } from 'react';
-import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import type { FC } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
+import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
+import type { SharedSelection } from '@nextui-org/react';
 import {
   Button,
   Form,
   Input,
   Select,
   SelectItem,
-  SharedSelection,
   Tooltip,
 } from '@nextui-org/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '~/utils/trpc';
+import type { EventId } from '~/server/schemas';
 import { playerNameSchema, scoreSchema } from '~/server/schemas';
 import toast from 'react-hot-toast';
 import { formatScore, getInputLabel } from '~/utils/format';
@@ -24,7 +27,7 @@ const formSchema = z.strictObject({
   score: scoreSchema,
 });
 
-export const AddScoreForm: FC = () => {
+export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const trpcUtils = trpc.useUtils();
   const {
     value: gameId,
@@ -70,7 +73,7 @@ export const AddScoreForm: FC = () => {
     (errors) => toast.error(collectErrors(errors).join('\n')),
     [],
   );
-  const gamesQuery = trpc.games.list.useQuery();
+  const gamesQuery = trpc.games.list.useQuery({ eventId });
   const games = useMemo(() => gamesQuery.data ?? [], [gamesQuery.data]);
   useEffect(() => {
     if (games.length === 0) {

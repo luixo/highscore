@@ -17,7 +17,7 @@ export const procedure = publicProcedure
         score: true,
         createdAt: true,
         updatedAt: true,
-        moderator: true,
+        moderatorName: true,
       },
       where: {
         gameId,

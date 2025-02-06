@@ -1,4 +1,5 @@
-import { FC, useCallback } from 'react';
+import type { FC } from 'react';
+import { useCallback } from 'react';
 import {
   Form,
   Button,
@@ -7,14 +8,11 @@ import {
   SelectItem,
   Tooltip,
 } from '@nextui-org/react';
-import {
-  Controller,
-  SubmitErrorHandler,
-  SubmitHandler,
-  useForm,
-} from 'react-hook-form';
+import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { EventId } from '~/server/schemas';
 import {
   gameTitleSchema,
   logoUrlSchema,
@@ -34,7 +32,7 @@ const formSchema = z.strictObject({
   scoreFormat: scoreFormatSchema.optional(),
 });
 
-export const AddGameForm: FC = () => {
+export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
@@ -48,6 +46,7 @@ export const AddGameForm: FC = () => {
   const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(
     (data) => {
       addGameMutation.mutate({
+        eventId: eventId,
         title: data.title,
         formatters: data.formatters,
         logoUrl: data.logoUrl,
@@ -55,7 +54,7 @@ export const AddGameForm: FC = () => {
         scoreFormat: data.scoreFormat,
       });
     },
-    [addGameMutation],
+    [addGameMutation, eventId],
   );
   const onError = useCallback<SubmitErrorHandler<z.infer<typeof formSchema>>>(
     (errors) => toast.error(collectErrors(errors).join('\n')),

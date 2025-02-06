@@ -6,7 +6,7 @@ import { procedure } from './list';
 test('get list of games', async () => {
   const ctx = createContextInner({ cookies: {} });
   const caller = createCallerFactory(router({ procedure }))(ctx);
-  const games = await caller.procedure();
+  const games = await caller.procedure({ eventId: 'unknown' });
   expect(games).toMatchObject<typeof games>([
     {
       id: 'unknown',
@@ -21,6 +21,9 @@ test('get list of games', async () => {
       logoUrl: '',
       createdAt: new Date(),
       updatedAt: new Date(),
+      sortDirection: 'Asc',
+      formatScore: null,
+      eventId: 'unknown',
     },
   ]);
 });

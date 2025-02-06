@@ -1,4 +1,4 @@
-import { ComponentProps, FC } from 'react';
+import type { ComponentProps, FC } from 'react';
 import { CiCircleRemove } from 'react-icons/ci';
 
 export const RemoveButton: FC<

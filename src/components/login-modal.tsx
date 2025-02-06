@@ -1,4 +1,5 @@
-import { FC, useCallback, useContext, useRef, useState } from 'react';
+import type { FC } from 'react';
+import { useCallback, useContext, useRef, useState } from 'react';
 import { CiLogin, CiCircleCheck, CiCircleRemove } from 'react-icons/ci';
 import {
   Button,
@@ -12,9 +13,10 @@ import {
 } from '@nextui-org/react';
 import { ModeratorContext } from '~/components/moderator-context';
 import { trpc } from '~/utils/trpc';
+import type { EventId, GameId } from '~/server/schemas';
 
-const ModeratorStatusBadge: FC = () => {
-  const selfModeratorQuery = trpc.moderator.get.useQuery();
+const ModeratorStatusBadge: FC<{ eventId: GameId }> = ({ eventId }) => {
+  const selfModeratorQuery = trpc.moderator.get.useQuery({ eventId });
   switch (selfModeratorQuery.status) {
     case 'error':
       return (
@@ -35,7 +37,7 @@ const ModeratorStatusBadge: FC = () => {
   }
 };
 
-export const LoginModal: FC = () => {
+export const LoginModal: FC<{ eventId: EventId }> = ({ eventId }) => {
   const emailRef = useRef<HTMLInputElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [moderator, setModerator] = useContext(ModeratorContext);
@@ -62,7 +64,7 @@ export const LoginModal: FC = () => {
           <Form onSubmit={onSubmit}>
             <ModalHeader>Логин</ModalHeader>
             <ModalBody className="w-full">
-              <ModeratorStatusBadge />
+              <ModeratorStatusBadge eventId={eventId} />
               <Input
                 label="Ключ"
                 type="email"

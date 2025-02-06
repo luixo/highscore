@@ -1,4 +1,4 @@
-import { FieldErrors } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 
 export const collectErrors = (errors: FieldErrors<any>): string[] => {
   return Object.values(errors).reduce<string[]>((acc, value) => {

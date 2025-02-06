@@ -1,8 +1,11 @@
-import { FC, useCallback } from 'react';
+import type { FC } from 'react';
+import { useCallback } from 'react';
 import { Form, Button, Input, Tooltip } from '@nextui-org/react';
-import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import type { EventId } from '~/server/schemas';
 import { moderatorNameSchema, moderatorKeySchema } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 import { toast } from 'react-hot-toast';
@@ -13,7 +16,7 @@ const formSchema = z.strictObject({
   key: moderatorKeySchema,
 });
 
-export const AddModeratorForm: FC = () => {
+export const AddModeratorForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
 
@@ -26,8 +29,9 @@ export const AddModeratorForm: FC = () => {
     },
   });
   const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(
-    (data) => addModeratorMutation.mutate({ name: data.name, key: data.key }),
-    [addModeratorMutation],
+    (data) =>
+      addModeratorMutation.mutate({ eventId, name: data.name, key: data.key }),
+    [addModeratorMutation, eventId],
   );
   const onError = useCallback<SubmitErrorHandler<z.infer<typeof formSchema>>>(
     (errors) => toast.error(collectErrors(errors).join('\n')),

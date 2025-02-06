@@ -1,10 +1,11 @@
 import { setCookie, deleteCookie } from 'cookies-next';
-import {
-  createContext,
+import type {
   Dispatch,
   FC,
   PropsWithChildren,
-  SetStateAction,
+  SetStateAction} from 'react';
+import {
+  createContext,
   useEffect,
   useState,
 } from 'react';

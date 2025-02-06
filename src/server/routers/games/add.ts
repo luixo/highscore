@@ -8,12 +8,14 @@ import {
   formattersSchema,
   sortDirectionSchema,
   scoreFormatSchema,
+  eventIdSchema,
 } from '~/server/schemas';
 import { pushEvent } from '~/server/pusher';
 
 export const procedure = adminProcedure
   .input(
     z.object({
+      eventId: eventIdSchema,
       title: gameTitleSchema,
       formatters: formattersSchema,
       logoUrl: logoUrlSchema,
@@ -23,10 +25,18 @@ export const procedure = adminProcedure
   )
   .mutation(
     async ({
-      input: { title, formatters, logoUrl, sortDirection, scoreFormat },
+      input: {
+        eventId,
+        title,
+        formatters,
+        logoUrl,
+        sortDirection,
+        scoreFormat,
+      },
     }) => {
       const game = await prisma.game.create({
         data: {
+          eventId,
           title,
           formatters,
           logoUrl,
@@ -42,6 +52,7 @@ export const procedure = adminProcedure
           formatScore: true,
           createdAt: true,
           updatedAt: true,
+          eventId: true,
         },
       });
       await pushEvent('game:added', { game });

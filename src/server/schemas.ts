@@ -18,7 +18,11 @@ export const formattersSchema = z.strictObject({
   inputLabel: z.string(),
 });
 
+export const eventIdSchema = z.string().uuid();
+export type EventId = z.infer<typeof eventIdSchema>;
+
 export const gameIdSchema = z.string().uuid();
+export type GameId = z.infer<typeof gameIdSchema>;
 
 export const logoUrlSchema = z.string().url();
 

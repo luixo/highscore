@@ -7,18 +7,18 @@ import { pushEvent } from '~/server/pusher';
 export const procedure = adminProcedure
   .input(
     z.object({
-      id: gameIdSchema,
+      gameId: gameIdSchema,
       updateObject: gameUpdateObject,
     }),
   )
-  .mutation(async ({ input: { id, updateObject } }) => {
+  .mutation(async ({ input: { gameId, updateObject } }) => {
     await prisma.game.update({
       where: {
-        id,
+        id: gameId,
       },
       data: {
         title: updateObject.title,
       },
     });
-    await pushEvent('game:updated', { id, updateObject });
+    await pushEvent('game:updated', { id: gameId, updateObject });
   });

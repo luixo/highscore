@@ -1,7 +1,8 @@
 import Pusher from 'pusher';
 import SuperJSON from 'superjson';
 import { env } from '~/server/env';
-import { getChannelName, PusherMapping } from '~/utils/pusher';
+import type { PusherMapping } from '~/utils/pusher';
+import { getChannelName } from '~/utils/pusher';
 
 const pusher = new Pusher({
   appId: env.PUSHER_APP_ID,

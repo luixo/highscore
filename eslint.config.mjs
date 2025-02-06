@@ -29,6 +29,7 @@ export default tseslint.config(
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
 
+      '@typescript-eslint/consistent-type-imports': 'error',
       // Consider removing these rule disables for more type safety in your app ✨
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/no-explicit-any': 'off',

@@ -10,12 +10,21 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model Event {
+  id String @id @default(uuid())
+  title String
+  games Game[]
+  moderators Moderator[]
+}
+
 model Game {
   id String @id @default(uuid())
   title String
   scores Score[]
   logoUrl String
   formatters Json
+  event Event @relation(fields: [eventId], references: [id])
+  eventId String
   sortDirection Direction @default(Desc)
   formatScore ScoreFormat?
 
@@ -28,6 +37,8 @@ model Moderator {
   name String @unique
   scores Score[]
   role ModeratorRole
+  event Event @relation(fields: [eventId], references: [id])
+  eventId String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

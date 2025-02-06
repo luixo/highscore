@@ -6,7 +6,12 @@ import { pushEvent } from '~/server/pusher';
 import { TRPCError } from '@trpc/server';
 
 export const procedure = protectedProcedure
-  .input(z.object({ gameId: gameIdSchema, playerName: playerNameSchema }))
+  .input(
+    z.object({
+      gameId: gameIdSchema,
+      playerName: playerNameSchema,
+    }),
+  )
   .mutation(async ({ input: { gameId, playerName } }) => {
     const matchedPlayer = await prisma.score.findFirst({
       where: {

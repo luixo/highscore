@@ -8,18 +8,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const adminKey = 'secret_key';
-  await prisma.moderator.upsert({
-    where: {
-      key: adminKey,
-    },
-    create: {
-      key: adminKey,
-      name: 'Лёша',
-      role: 'Admin',
-    },
-    update: {},
-  });
+  console.log('Nothing to seed');
 }
 
 main()

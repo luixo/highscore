@@ -1,7 +1,7 @@
-import { inferProcedureOutput } from '@trpc/server';
+import type { inferProcedureOutput } from '@trpc/server';
 import type { z } from 'zod';
 import type { AppRouter } from '~/server/routers/_app';
-import { gameUpdateObject, scoreUpdateObject } from '~/server/schemas';
+import type { gameUpdateObject, scoreUpdateObject } from '~/server/schemas';
 
 export const getChannelName = () => 'highscore';
 

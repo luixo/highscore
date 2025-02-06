@@ -1,9 +1,10 @@
 import React from 'react';
 
 import Pusher from 'pusher-js';
-import { getChannelName, PusherMapping } from '~/utils/pusher';
+import type { PusherMapping } from '~/utils/pusher';
+import { getChannelName } from '~/utils/pusher';
 import SuperJSON from 'superjson';
-import { SuperJSONResult } from 'superjson/dist/types';
+import type { SuperJSONResult } from 'superjson/dist/types';
 
 let pusherInstance: Pusher | undefined;
 
