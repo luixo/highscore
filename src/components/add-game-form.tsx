@@ -664,7 +664,6 @@ export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
       } satisfies Form['aggregation'],
     },
   });
-  console.log('watch', form.watch());
   const addGameMutation = trpc.games.add.useMutation({
     onSuccess: (result) => {
       toast.success(`Игра "${result.title}" добавлена`);

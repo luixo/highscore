@@ -1,4 +1,4 @@
-import { useEffect, useState, type FC } from 'react';
+import { useState, type FC } from 'react';
 
 import { Scores } from '~/components/scores';
 import { Card, CardBody, CardHeader, Divider } from '@nextui-org/react';
@@ -18,12 +18,13 @@ export const Game: FC<{
     },
   });
   const [imageStatus, setImageStatus] = useState('idle');
+  console.log('state', imageStatus);
   return (
     <Card className="min-h-[250px] w-[320px] lg:w-[240px]">
       <CardHeader className="relative flex h-[50px] justify-between gap-2 overflow-hidden bg-slate-300">
         {game.logoUrl ? (
           <img
-            className={`absolute inset-0 -z-20 w-full ${imageStatus ? 'hidden' : ''}`}
+            className={`absolute inset-0 -z-20 w-full ${imageStatus === 'error' ? 'hidden' : ''}`}
             src={game.logoUrl}
             alt={game.title}
             onError={() => setImageStatus('error')}
