@@ -340,6 +340,7 @@ const collectKeys = (
     case 'sum':
     case 'difference':
     case 'division':
+    case 'multiply':
       return aggregation.values.reduce<string[]>(
         (acc, value) => [...acc, ...collectKeys(value)],
         [],
@@ -463,6 +464,18 @@ const AggregationButtonGroup: FC<{
         isIconOnly
         onPress={() =>
           onClick({
+            type: 'multiply',
+            values: [defaultValue],
+          })
+        }
+      >
+        *
+      </Button>
+      <Button
+        color={color}
+        isIconOnly
+        onPress={() =>
+          onClick({
             type: 'division',
             values: [defaultValue, defaultValue],
           })
@@ -488,6 +501,8 @@ const SwitchAggregationForm: FC<{
       return <AggregationDifferenceForm form={form} path={path} />;
     case 'division':
       return <AggregationDivisionForm form={form} path={path} />;
+    case 'multiply':
+      return <AggregationMultiplyForm form={form} path={path} />;
   }
 };
 
@@ -586,6 +601,18 @@ const AggregationDivisionForm: FC<{
   return (
     <div className="flex w-full flex-col items-start gap-2 pl-4">
       <h4 className="text-xl font-semibold">Частное</h4>
+      <MultipleAggregationForm form={form} path={path} />
+    </div>
+  );
+};
+
+const AggregationMultiplyForm: FC<{
+  form: UseFormReturn<Form>;
+  path: FieldPath<Form>;
+}> = ({ form, path }) => {
+  return (
+    <div className="flex w-full flex-col items-start gap-2 pl-4">
+      <h4 className="text-xl font-semibold">Произведение</h4>
       <MultipleAggregationForm form={form} path={path} />
     </div>
   );

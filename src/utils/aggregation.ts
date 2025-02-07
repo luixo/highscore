@@ -26,6 +26,11 @@ export const aggregateScore = (
           (acc, sub) => acc - aggregateScore(inputs, sub),
           aggregateScore(inputs, aggregation.values[0]),
         );
+    case 'multiply':
+      return aggregation.values.reduce(
+        (acc, sub) => acc * aggregateScore(inputs, sub),
+        1,
+      );
     case 'division':
       return aggregation.values
         .slice(1)

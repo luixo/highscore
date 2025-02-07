@@ -87,7 +87,8 @@ type AllAggregation =
   | z.infer<typeof valueAggregationSchema>
   | SumAggregation
   | DifferenceAggregation
-  | DivisionAggregation;
+  | DivisionAggregation
+  | MultiplyAggregation;
 
 const allAggregationSchema = z.lazy(() =>
   valueAggregationSchema
@@ -127,16 +128,29 @@ const divisionAggregationSchema: z.ZodType<DivisionAggregation> =
     values: allAggregationSchema.array().length(2),
   });
 
+type MultiplyAggregation = {
+  type: 'multiply';
+  values: AllAggregation[];
+};
+
+const multiplyAggregationSchema: z.ZodType<MultiplyAggregation> =
+  z.strictObject({
+    type: z.literal('multiply'),
+    values: allAggregationSchema.array().length(2),
+  });
+
 // @ts-expect-error dark magic of discriminatedUnion & lazy types
 export const aggregationSchema = z.discriminatedUnion('type', [
   valueAggregationSchema,
   sumAggregationSchema,
   differenceAggregationSchema,
   divisionAggregationSchema,
+  multiplyAggregationSchema,
 ]) as unknown as z.ZodType<
   | z.infer<typeof sumAggregationSchema>
   | z.infer<typeof differenceAggregationSchema>
   | z.infer<typeof divisionAggregationSchema>
+  | z.infer<typeof multiplyAggregationSchema>
   | z.infer<typeof valueAggregationSchema>
 >;
 
