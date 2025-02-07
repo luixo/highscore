@@ -43,7 +43,7 @@ export const procedure = protectedProcedure
         gameId,
         playerName: playerNameInsensitive,
         values,
-        moderatorName: ctx.session.name,
+        moderatorKey: ctx.session.key,
       },
       update: {
         values: values.map((scoreValue) => {

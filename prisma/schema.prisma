@@ -36,7 +36,7 @@ model Game {
 
 model Moderator {
   key String @unique
-  name String @unique
+  name String
   scores Score[]
   role ModeratorRole
   event Event @relation(fields: [eventId], references: [id])
@@ -44,14 +44,16 @@ model Moderator {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([name, eventId], name: "nameEventIdentifier")
 }
 
 model Score {
   game Game @relation(fields: [gameId], references: [id])
   gameId String
 
-  moderator Moderator @relation(fields: [moderatorName], references: [name])
-  moderatorName String
+  moderator Moderator @relation(fields: [moderatorKey], references: [key])
+  moderatorKey String
 
   playerName String
   values Json
