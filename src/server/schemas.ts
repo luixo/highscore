@@ -86,7 +86,7 @@ export const addGameSchema = z.object({
   eventId: eventIdSchema,
   title: gameTitleSchema,
   formatters: formattersSchema,
-  logoUrl: logoUrlSchema,
+  logoUrl: logoUrlSchema.optional(),
   sortDirection: sortDirectionSchema,
   scoreFormat: scoreFormatSchema.optional(),
   aggregation: aggregationSchema.optional(),

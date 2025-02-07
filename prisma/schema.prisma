@@ -21,7 +21,7 @@ model Game {
   id String @id @default(uuid())
   title String
   scores Score[]
-  logoUrl String
+  logoUrl String?
   formatters Json
   event Event @relation(fields: [eventId], references: [id])
   eventId String

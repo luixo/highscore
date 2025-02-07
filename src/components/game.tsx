@@ -1,4 +1,4 @@
-import type { FC } from 'react';
+import { useEffect, useState, type FC } from 'react';
 
 import { Scores } from '~/components/scores';
 import { Card, CardBody, CardHeader, Divider } from '@nextui-org/react';
@@ -17,14 +17,22 @@ export const Game: FC<{
       toast.success(`Игра "${variables.id}" удалена.`);
     },
   });
+  const [isImageError, setImageError] = useState(false);
+  useEffect(() => {
+    setImageError(false);
+  }, [game.logoUrl]);
   return (
     <Card className="min-h-[250px] w-[320px] lg:w-[240px]">
-      <CardHeader className="relative flex h-[50px] justify-end gap-2 overflow-hidden">
-        <img
-          className="absolute inset-0 -z-20 w-full"
-          src={game.logoUrl ?? ''}
-          alt={game.title}
-        />
+      <CardHeader className="relative flex h-[50px] justify-between gap-2 overflow-hidden bg-slate-300">
+        {game.logoUrl ? (
+          <img
+            className={`absolute inset-0 -z-20 w-full ${isImageError ? 'hidden' : ''}`}
+            src={game.logoUrl}
+            alt={game.title}
+            onError={() => setImageError(true)}
+          />
+        ) : null}
+        <h3>{game.title}</h3>
         {moderatorStatus === 'Admin' ? (
           <RemoveButton
             onClick={() =>

@@ -93,7 +93,6 @@ export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
       />
       <Input
         {...form.register('logoUrl')}
-        isRequired
         label="URL логотипа (размер)"
         errorMessage={form.formState.errors.logoUrl?.message?.toString()}
         isInvalid={Boolean(form.formState.errors.logoUrl?.message)}

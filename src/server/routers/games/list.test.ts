@@ -18,7 +18,7 @@ test('get list of games', async () => {
           many: '%s coins',
         },
       },
-      logoUrl: '',
+      logoUrl: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       sortDirection: 'Asc',
