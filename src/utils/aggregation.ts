@@ -15,10 +15,9 @@ export const aggregateScore = (
           aggregation.defaultValue) * weight
       );
     case 'sum':
-      return aggregation.values.reduce(
-        (acc, sub) => acc + aggregateScore(inputs, sub),
-        0,
-      );
+      return aggregation.values.reduce((acc, sub) => {
+        return acc + aggregateScore(inputs, sub);
+      }, 0);
     case 'difference':
       return aggregation.values
         .slice(1)
@@ -32,11 +31,11 @@ export const aggregateScore = (
         1,
       );
     case 'division':
-      return aggregation.values
-        .slice(1)
-        .reduce(
-          (acc, sub) => acc / aggregateScore(inputs, sub),
-          aggregateScore(inputs, aggregation.values[0]),
-        );
+      return aggregation.values.slice(1).reduce(
+        (acc, sub) => {
+          return acc / aggregateScore(inputs, sub);
+        },
+        aggregateScore(inputs, aggregation.values[0]),
+      );
   }
 };

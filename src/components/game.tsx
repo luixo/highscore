@@ -18,7 +18,6 @@ export const Game: FC<{
     },
   });
   const [imageStatus, setImageStatus] = useState('idle');
-  console.log('state', imageStatus);
   return (
     <Card className="min-h-[250px] w-[320px] lg:w-[240px]">
       <CardHeader className="relative flex h-[50px] justify-between gap-2 overflow-hidden bg-slate-300">

@@ -79,7 +79,7 @@ export const scoreUpdateObject = z.discriminatedUnion('type', [
 export const valueAggregationSchema = z.strictObject({
   type: z.literal('value'),
   key: gameValueKeySchema,
-  weight: z.number().min(0).optional(),
+  weight: z.number().optional(),
   defaultValue: gameDefaultValueSchema,
 });
 
