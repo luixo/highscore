@@ -5,7 +5,7 @@ import type {
   SubmitHandler,
   UseFormReturn,
 } from 'react-hook-form';
-import { useFieldArray, useForm } from 'react-hook-form';
+import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import type { SharedSelection } from '@nextui-org/react';
 import {
   Button,
@@ -13,20 +13,22 @@ import {
   Input,
   Select,
   SelectItem,
+  Spinner,
   Tooltip,
 } from '@nextui-org/react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '~/utils/trpc';
-import type { EventId } from '~/server/schemas';
+import type { EventId, inputsSchema } from '~/server/schemas';
 import { playerNameSchema, scoresSchema } from '~/server/schemas';
 import toast from 'react-hot-toast';
 import { formatScore } from '~/utils/format';
 import { Game } from '~/components/game';
 import { collectErrors } from '~/utils/form';
 import { useLastGame } from '~/hooks/use-last-game';
-import { getAggregation, getFormatting } from '~/utils/jsons';
+import { getAggregation, getFormatting, getInputs } from '~/utils/jsons';
 import { aggregateScore } from '~/utils/aggregation';
+import type { Prisma } from '@prisma/client';
 
 const formSchema = z.strictObject({
   playerName: playerNameSchema,
@@ -35,39 +37,62 @@ const formSchema = z.strictObject({
 
 type Form = z.infer<typeof formSchema>;
 
-const ScoresForm: FC<{ form: UseFormReturn<Form> }> = ({ form }) => {
-  const { fields, append } = useFieldArray({
+const ScoresForm: FC<{
+  form: UseFormReturn<Form>;
+  inputs: z.infer<typeof inputsSchema>;
+}> = ({ form, inputs }) => {
+  const { fields } = useFieldArray({
     control: form.control,
     name: 'scores',
   });
   return (
     <>
-      {fields.map((field, index) => (
-        <Input
-          key={field.id}
-          {...form.register(`scores.${index}.type`)}
-          type="number"
-          placeholder="74"
-          errorMessage={form.formState.errors.scores?.[
-            index
-          ]?.message?.toString()}
-          isInvalid={Boolean(form.formState.errors.scores?.[index]?.message)}
-        />
-      ))}
-      <Button onPress={() => append({ type: 'number', value: 0, key: 'x' })}>
-        +
-      </Button>
+      {fields.map((field, index) => {
+        const input = inputs[index];
+        if (input.hidden) {
+          return (
+            <Controller
+              key={field.id}
+              control={form.control}
+              name={`scores.${index}`}
+              render={() => <div className="hidden" />}
+            />
+          );
+        }
+        return (
+          <Input
+            key={field.id}
+            {...form.register(`scores.${index}.value`, { valueAsNumber: true })}
+            label={input.description}
+            type="number"
+            placeholder={input.defaultValue.toString()}
+            errorMessage={form.formState.errors.scores?.[
+              index
+            ]?.message?.toString()}
+            isInvalid={Boolean(form.formState.errors.scores?.[index]?.message)}
+          />
+        );
+      })}
     </>
   );
 };
 
-export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
-  const trpcUtils = trpc.useUtils();
-  const { gameId, setGameId, removeGameId } = useLastGame(eventId);
+const SelectedGameForm: FC<{ game: Prisma.GameGetPayload<{}> }> = ({
+  game,
+}) => {
+  const inputs = getInputs(game.inputs);
   const form = useForm<Form>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
+    defaultValues: {
+      scores: inputs.map((input) => ({
+        type: input.type,
+        key: input.key,
+        value: input.defaultValue ?? undefined,
+      })),
+    },
   });
+  const trpcUtils = trpc.useUtils();
   const addScoreMutation = trpc.scores.upsert.useMutation({
     onSuccess: (response, variables) => {
       const gamesCache = trpcUtils.games.list.getData();
@@ -84,21 +109,52 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   });
   const onSubmit = useCallback<SubmitHandler<Form>>(
     (data) => {
-      if (!gameId) {
-        return;
-      }
       addScoreMutation.mutate({
         playerName: data.playerName,
         scores: data.scores,
-        gameId,
+        gameId: game.id,
       });
     },
-    [addScoreMutation, gameId],
+    [addScoreMutation, game.id],
   );
   const onError = useCallback<SubmitErrorHandler<Form>>(
     (errors) => toast.error(collectErrors(errors).join('\n')),
     [],
   );
+  return (
+    <>
+      <Form onSubmit={form.handleSubmit(onSubmit, onError)} className="w-full">
+        <Input
+          {...form.register('playerName')}
+          label="Имя игрока"
+          errorMessage={form.formState.errors.playerName?.message?.toString()}
+          isInvalid={Boolean(form.formState.errors.playerName?.message)}
+        />
+        <ScoresForm form={form} inputs={inputs} />
+
+        <Tooltip
+          isDisabled={form.formState.isValid}
+          content={collectErrors(form.formState.errors)}
+        >
+          <div>
+            <Button
+              type="submit"
+              color="primary"
+              className="self-end"
+              isDisabled={!game.id || !form.formState.isValid}
+            >
+              Добавить
+            </Button>
+          </div>
+        </Tooltip>
+      </Form>
+      <Game game={game} />
+    </>
+  );
+};
+
+export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
+  const { gameId, setGameId, removeGameId } = useLastGame(eventId);
   const gamesQuery = trpc.games.list.useQuery({ eventId });
   const games = useMemo(() => gamesQuery.data ?? [], [gamesQuery.data]);
   useEffect(() => {
@@ -148,32 +204,11 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
           </SelectItem>
         ))}
       </Select>
-      <Form onSubmit={form.handleSubmit(onSubmit, onError)} className="w-full">
-        <Input
-          {...form.register('playerName')}
-          label="Имя игрока"
-          errorMessage={form.formState.errors.playerName?.message?.toString()}
-          isInvalid={Boolean(form.formState.errors.playerName?.message)}
-        />
-        <ScoresForm form={form} />
-
-        <Tooltip
-          isDisabled={form.formState.isValid}
-          content={collectErrors(form.formState.errors)}
-        >
-          <div>
-            <Button
-              type="submit"
-              color="primary"
-              className="self-end"
-              isDisabled={!gameId || !form.formState.isValid}
-            >
-              Добавить
-            </Button>
-          </div>
-        </Tooltip>
-      </Form>
-      {selectedGame ? <Game game={selectedGame} /> : null}
+      {selectedGame ? (
+        <SelectedGameForm game={selectedGame} />
+      ) : (
+        <Spinner size="lg" />
+      )}
     </div>
   );
 };

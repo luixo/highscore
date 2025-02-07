@@ -8,21 +8,32 @@ import {
   sortSchema,
 } from '~/server/schemas';
 
-export const getParser = <T extends ZodType<any, any, any>>(schema: T) => {
+export const getParser = <T extends ZodType<any, any, any>>(
+  schema: T,
+  defaultValue: z.infer<T>,
+) => {
   return (value?: Prisma.JsonValue): z.infer<T> => {
     if (!value) {
-      return;
+      return defaultValue;
     }
     const parsedValue = schema.safeParse(value);
     if (!parsedValue.success) {
-      return;
+      return defaultValue;
     }
     return parsedValue.data;
   };
 };
 
-export const getAggregation = getParser(aggregationSchema);
-export const getFormatting = getParser(formattingSchema);
-export const getInputs = getParser(inputsSchema);
-export const getScores = getParser(scoresSchema);
-export const getSort = getParser(sortSchema);
+export const getAggregation = getParser(aggregationSchema, {
+  type: 'value',
+  key: 'value',
+  defaultValue: 0,
+});
+export const getFormatting = getParser(formattingSchema, {
+  type: 'regex',
+  precision: 4,
+  regex: '%value%',
+});
+export const getInputs = getParser(inputsSchema, []);
+export const getScores = getParser(scoresSchema, []);
+export const getSort = getParser(sortSchema, { direction: 'asc' });

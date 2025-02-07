@@ -10,6 +10,7 @@ import {
   Code,
   ButtonGroup,
   Divider,
+  Switch,
 } from '@nextui-org/react';
 import type {
   FieldArrayPath,
@@ -23,7 +24,11 @@ import type {
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
-import type { aggregationSchema, EventId } from '~/server/schemas';
+import type {
+  aggregationSchema,
+  EventId,
+  inputsSchema,
+} from '~/server/schemas';
 import { addGameSchema, precisionSchema } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 import { toast } from 'react-hot-toast';
@@ -130,20 +135,53 @@ const FormatForm: FC<{ form: UseFormReturn<Form> }> = ({ form }) => {
           form.formState.errors.formatting?.precision?.message,
         )}
       />
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {mockedInputs.map((input) => (
           <Code key={input.key}>
             {input.key}: {input.value.toPrecision(precision)}
           </Code>
         ))}
       </div>
-      <Code>
-        {formatScore(score, {
-          ...formatting,
-          precision,
-        })}
-      </Code>
+      <span>Результат:</span>
+      <Code>{formatScore(score, { ...formatting, precision })}</Code>
     </>
+  );
+};
+
+const InputButtonGroup: FC<{
+  onClick: (value: z.infer<typeof inputsSchema>[number]) => void;
+}> = ({ onClick }) => {
+  const randomUuid =
+    typeof window === 'undefined' ? 'none' : window.crypto?.randomUUID?.();
+  return (
+    <ButtonGroup prefix="+" size="sm">
+      <Button
+        color="primary"
+        onPress={() =>
+          onClick({
+            type: 'number',
+            key: randomUuid,
+            description: '',
+            defaultValue: 0,
+          })
+        }
+      >
+        number
+      </Button>
+      <Button
+        color="primary"
+        onPress={() =>
+          onClick({
+            type: 'counter',
+            key: randomUuid,
+            description: '',
+            defaultValue: 0,
+          })
+        }
+      >
+        counter
+      </Button>
+    </ButtonGroup>
   );
 };
 
@@ -157,82 +195,88 @@ const InputsForm: FC<{ form: UseFormReturn<Form> }> = ({ form }) => {
       <h4 className="text-xl font-semibold">Ввод</h4>
       {fields.map((field, index) => (
         <div key={field.id} className="flex w-full flex-col gap-2">
-          <div className="flex w-full items-center justify-between gap-2">
-            <h5>
-              Поле #{index} (тип: {field.type})
-            </h5>
-            <Button color="danger" isIconOnly onPress={() => remove(index)}>
-              <CiCircleRemove />
-            </Button>
-          </div>
-          <Input
-            {...form.register(`inputs.${index}.description`)}
-            isRequired
-            label="Описание поля ввода"
-            placeholder="За сколько выполнено"
-            errorMessage={form.formState.errors.inputs?.[
-              index
-            ]?.description?.message?.toString()}
-            isInvalid={Boolean(
-              form.formState.errors.inputs?.[index]?.description?.message,
-            )}
-          />
-          <Input
-            {...form.register(`inputs.${index}.key`)}
-            isRequired
-            label="Ключ поля ввода"
-            placeholder="default"
-            errorMessage={form.formState.errors.inputs?.[
-              index
-            ]?.key?.message?.toString()}
-            isInvalid={Boolean(
-              form.formState.errors.inputs?.[index]?.key?.message,
-            )}
-          />
-          <Input
-            {...form.register(`inputs.${index}.defaultValue`, {
-              valueAsNumber: true,
-            })}
-            isRequired
-            label="Значение по умолчанию"
-            placeholder="0"
-            errorMessage={form.formState.errors.inputs?.[
-              index
-            ]?.defaultValue?.message?.toString()}
-            isInvalid={Boolean(
-              form.formState.errors.inputs?.[index]?.defaultValue?.message,
+          <Controller
+            control={form.control}
+            name={`inputs.${index}`}
+            key={field.id}
+            render={({ field }) => (
+              <>
+                <div className="flex w-full items-center justify-between gap-2">
+                  <h5>Поле #{index}</h5>
+                  <div className="flex gap-2">
+                    <InputButtonGroup
+                      onClick={(value) =>
+                        form.setValue(`inputs.${index}`, value)
+                      }
+                    />
+                    <Button
+                      color="danger"
+                      isIconOnly
+                      size="sm"
+                      onPress={() => remove(index)}
+                    >
+                      <CiCircleRemove />
+                    </Button>
+                  </div>
+                </div>
+                <Input
+                  {...form.register(`inputs.${index}.description`)}
+                  isRequired
+                  label="Описание поля ввода"
+                  placeholder="За сколько выполнено"
+                  errorMessage={form.formState.errors.inputs?.[
+                    index
+                  ]?.description?.message?.toString()}
+                  isInvalid={Boolean(
+                    form.formState.errors.inputs?.[index]?.description?.message,
+                  )}
+                />
+                <Input
+                  {...form.register(`inputs.${index}.key`)}
+                  isRequired
+                  label="Ключ поля ввода"
+                  placeholder="default"
+                  errorMessage={form.formState.errors.inputs?.[
+                    index
+                  ]?.key?.message?.toString()}
+                  isInvalid={Boolean(
+                    form.formState.errors.inputs?.[index]?.key?.message,
+                  )}
+                />
+                <Input
+                  {...form.register(`inputs.${index}.defaultValue`, {
+                    valueAsNumber: true,
+                  })}
+                  isRequired
+                  label={
+                    field.value.type === 'counter'
+                      ? 'Инкремент счетчика'
+                      : 'Значение по умолчанию'
+                  }
+                  placeholder="0"
+                  errorMessage={form.formState.errors.inputs?.[
+                    index
+                  ]?.defaultValue?.message?.toString()}
+                  isInvalid={Boolean(
+                    form.formState.errors.inputs?.[index]?.defaultValue
+                      ?.message,
+                  )}
+                />
+                <Controller
+                  control={form.control}
+                  name={`inputs.${index}.hidden`}
+                  render={({ field: { value, ...field } }) => (
+                    <Switch isSelected={value ?? false} {...field}>
+                      Скрыто
+                    </Switch>
+                  )}
+                />
+              </>
             )}
           />
         </div>
       ))}
-      <ButtonGroup>
-        <Button
-          color="primary"
-          onPress={() =>
-            append({
-              type: 'number',
-              key: 'unknown',
-              description: '',
-              defaultValue: 0,
-            })
-          }
-        >
-          + number
-        </Button>
-        <Button
-          color="primary"
-          onPress={() =>
-            append({
-              type: 'counter',
-              key: 'unknown',
-              description: '',
-              defaultValue: 0,
-            })
-          }
-        >
-          + counter
-        </Button>
-      </ButtonGroup>
+      <InputButtonGroup onClick={append} />
     </div>
   );
 };
@@ -474,14 +518,13 @@ const MultipleAggregationForm: FC<{
                     <div className="flex gap-2">
                       <AggregationButtonGroup
                         form={form}
-                        onClick={(value) => {
-                          form.setValue(localPath, value);
-                        }}
+                        onClick={(value) => form.setValue(localPath, value)}
                         color="primary"
                       />
                       <Button
                         color="danger"
                         isIconOnly
+                        size="sm"
                         onPress={() => remove(index)}
                         isDisabled={fields.length === 1}
                       >
@@ -594,6 +637,7 @@ export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
       } satisfies Form['aggregation'],
     },
   });
+  console.log('watch', form.watch());
   const addGameMutation = trpc.games.add.useMutation({
     onSuccess: (result) => {
       toast.success(`Игра "${result.title}" добавлена`);

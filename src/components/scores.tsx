@@ -28,6 +28,7 @@ import type { Prisma } from '@prisma/client';
 import {
   getAggregation,
   getFormatting,
+  getInputs,
   getScores,
   getSort,
 } from '~/utils/jsons';
@@ -90,7 +91,7 @@ const RenamePlayerModal: FC<{
 };
 
 const ChangePlayerScoreModal: FC<{
-  gameId: string;
+  game: Prisma.GameGetPayload<{}>;
   player:
     | {
         name: string;
@@ -98,7 +99,7 @@ const ChangePlayerScoreModal: FC<{
       }
     | undefined;
   onClose: () => void;
-}> = ({ gameId, player, onClose }) => {
+}> = ({ game, player, onClose }) => {
   const [localScores, setLocalScores] = useState<z.infer<typeof scoresSchema>>(
     player?.scores ?? [],
   );
@@ -121,34 +122,44 @@ const ChangePlayerScoreModal: FC<{
     onClose();
     updateScoreMutation.mutate({
       playerName: player.name,
-      gameId,
+      gameId: game.id,
       updateObject: {
         type: 'scores',
         scores: localScores,
       },
     });
-  }, [player, localScores, onClose, updateScoreMutation, gameId]);
+  }, [player, localScores, onClose, updateScoreMutation, game.id]);
   if (!player) {
     return null;
   }
+  const inputs = getInputs(game.inputs);
   return (
     <Modal isOpen onOpenChange={onClose}>
       <ModalContent>
         <ModalHeader>Изменить очки игрока "{player.name}"</ModalHeader>
         <ModalBody className="w-full">
-          {localScores.map((localScore) => (
-            <Input
-              key={localScore.key}
-              value={localScore.value.toString()}
-              onValueChange={(value) =>
-                setLocalScores((prevScores) => ({
-                  ...prevScores,
-                  [localScore.key]: value,
-                }))
-              }
-              type="number"
-            />
-          ))}
+          {localScores.map((localScore, index) => {
+            const input = inputs[index];
+            return (
+              <Input
+                key={localScore.key}
+                value={localScore.value.toString()}
+                label={input.description}
+                onValueChange={(value) => {
+                  const numValue = Number(value);
+                  if (Number.isNaN(numValue)) {
+                    return;
+                  }
+                  setLocalScores((prevLocalScores) => [
+                    ...prevLocalScores.slice(0, index),
+                    { ...prevLocalScores[index], value: Number(value) },
+                    ...prevLocalScores.slice(index + 1),
+                  ]);
+                }}
+                type="number"
+              />
+            );
+          })}
           <Button
             color="primary"
             onPress={saveLocalPlayerName}
@@ -455,7 +466,7 @@ const ScoreBoard: FC<{
         onClose={() => setEditPlayerNameModal(undefined)}
       />
       <ChangePlayerScoreModal
-        gameId={game.id}
+        game={game}
         player={editPlayerScoreModal}
         onClose={() => setEditPlayerScoreModal(undefined)}
       />

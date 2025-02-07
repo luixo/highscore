@@ -7,9 +7,12 @@ export const aggregateScore = (
 ): number => {
   switch (aggregation.type) {
     case 'value':
+      const weight = Number.isNaN(aggregation.weight)
+        ? 1
+        : (aggregation.weight ?? 1);
       return (
         (inputs.find((input) => input.key === aggregation.key)?.value ??
-          aggregation.defaultValue) * (aggregation.weight ?? 1)
+          aggregation.defaultValue) * weight
       );
     case 'sum':
       return aggregation.values.reduce(

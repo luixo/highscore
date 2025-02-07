@@ -42,25 +42,25 @@ export const procedure = protectedProcedure
       create: {
         gameId,
         playerName: playerNameInsensitive,
+        values,
+        moderatorName: ctx.session.name,
+      },
+      update: {
         values: values.map((scoreValue) => {
+          const matchedValue = getScores(matchedScore?.values)?.find(
+            (score) => score.key === scoreValue.key,
+          );
           if (scoreValue.type === 'counter') {
-            const matchedValue = getScores(matchedScore?.values).find(
-              (score) => score.key === scoreValue.key,
-            );
             if (!matchedValue) {
               return scoreValue;
             }
             return {
               ...scoreValue,
-              value: scoreValue.value + matchedValue.value,
+              value: matchedValue.value + scoreValue.value,
             };
           }
           return scoreValue;
         }),
-        moderatorName: ctx.session.name,
-      },
-      update: {
-        values,
       },
     });
 

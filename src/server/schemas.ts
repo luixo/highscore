@@ -149,12 +149,14 @@ export const inputsSchema = z
       description: inputDescriptionSchema,
       key: gameValueKeySchema,
       defaultValue: gameDefaultValueSchema,
+      hidden: z.boolean().optional(),
     }),
     z.strictObject({
       type: z.literal('counter'),
       description: inputDescriptionSchema,
       key: gameValueKeySchema,
       defaultValue: gameDefaultValueSchema,
+      hidden: z.boolean().optional(),
     }),
   ])
   .array();

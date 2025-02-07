@@ -24,7 +24,7 @@ const EventPage: NextPageWithLayout = () => {
       eventQuery.error.data?.code === 'NOT_FOUND'
     ) {
       removeEvent(eventId);
-      router.push('/events');
+      router.push('/');
     }
   }, [eventId, eventQuery.error, eventQuery.status, removeEvent, router]);
   usePusher('game:added', ({ game }) => {
