@@ -1,43 +1,36 @@
 import { setCookie, deleteCookie } from 'cookies-next';
-import type {
-  Dispatch,
-  FC,
-  PropsWithChildren,
-  SetStateAction} from 'react';
-import {
-  createContext,
-  useEffect,
-  useState,
-} from 'react';
-import { MODERATOR_COOKIE_NAME } from '~/server/cookie';
+import type { Dispatch, FC, PropsWithChildren, SetStateAction } from 'react';
+import { createContext, useEffect, useState } from 'react';
+import { MODERATOR_COOKIE_KEYS } from '~/server/cookie';
+import type { EventId, GameId } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 
 type StateReturn<S> = [S, Dispatch<SetStateAction<S>>];
 
-export const ModeratorContext = createContext<StateReturn<string | undefined>>([
-  undefined,
+type Keys = Record<EventId, GameId>;
+
+export const ModeratorContext = createContext<StateReturn<Keys>>([
+  {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   () => {},
 ]);
 
 export const ModeratorProvider: FC<
-  PropsWithChildren<{ initialEmail: string | undefined }>
-> = ({ initialEmail, children }) => {
-  const [moderator, setModerator] = useState(initialEmail);
+  PropsWithChildren<{ initialKeys: Keys }>
+> = ({ initialKeys, children }) => {
+  const [keys, setKeys] = useState(initialKeys);
   const trpcUrils = trpc.useUtils();
   useEffect(() => {
-    if (moderator) {
-      setCookie(MODERATOR_COOKIE_NAME, moderator, {
+    if (Object.keys(keys).length === 0) {
+      deleteCookie(MODERATOR_COOKIE_KEYS);
+    } else {
+      setCookie(MODERATOR_COOKIE_KEYS, JSON.stringify(keys), {
         maxAge: 365 * 24 * 60 * 60 * 1000,
       });
-    } else {
-      deleteCookie(MODERATOR_COOKIE_NAME);
     }
     trpcUrils.moderator.get.invalidate();
-  }, [moderator, trpcUrils]);
+  }, [keys, trpcUrils]);
   return (
-    <ModeratorContext value={[moderator, setModerator]}>
-      {children}
-    </ModeratorContext>
+    <ModeratorContext value={[keys, setKeys]}>{children}</ModeratorContext>
   );
 };

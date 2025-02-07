@@ -1,6 +1,5 @@
 import type { ModeratorRole } from '@prisma/client';
-import { useContext } from 'react';
-import { ModeratorContext } from '~/components/moderator-context';
+import { useModeratorKey } from '~/hooks/use-moderator-key';
 import type { EventId } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 
@@ -12,9 +11,9 @@ export const useModeratorStatus = ({
 }: {
   eventId: EventId;
 }): ModeratorStatus => {
-  const [moderator] = useContext(ModeratorContext);
+  const { moderatorKey } = useModeratorKey(eventId);
   const selfModeratorQuery = trpc.moderator.get.useQuery({ eventId });
-  if (!moderator) {
+  if (!moderatorKey) {
     return null;
   }
   if (selfModeratorQuery.status === 'pending') {

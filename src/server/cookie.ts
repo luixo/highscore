@@ -1,1 +1,1 @@
-export const MODERATOR_COOKIE_NAME = 'moderator-key';
+export const MODERATOR_COOKIE_KEYS = 'moderator-keys';

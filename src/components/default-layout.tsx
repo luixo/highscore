@@ -24,7 +24,7 @@ export const DefaultLayout = ({ children }: DefaultLayoutProps) => {
         <link rel="manifest" href="/site.webmanifest" />
       </Head>
 
-      <main className="h-screen py-8">{children}</main>
+      <main className="h-screen py-4">{children}</main>
     </>
   );
 };

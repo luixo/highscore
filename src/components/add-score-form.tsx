@@ -18,9 +18,9 @@ import type { EventId } from '~/server/schemas';
 import { playerNameSchema, scoreSchema } from '~/server/schemas';
 import toast from 'react-hot-toast';
 import { formatScore, getInputLabel } from '~/utils/format';
-import { useLocalStorageValue } from '@react-hookz/web';
 import { Game } from '~/components/game';
 import { collectErrors } from '~/utils/form';
+import { useLastGame } from '~/hooks/use-last-game';
 
 const formSchema = z.strictObject({
   playerName: playerNameSchema,
@@ -29,11 +29,7 @@ const formSchema = z.strictObject({
 
 export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const trpcUtils = trpc.useUtils();
-  const {
-    value: gameId,
-    set: setGameId,
-    remove: removeGameId,
-  } = useLocalStorageValue<string | undefined>('selectedGameId');
+  const { gameId, setGameId, removeGameId } = useLastGame(eventId);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
@@ -89,15 +85,22 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const onSelectionChange = useCallback(
     (selection: SharedSelection) => {
       if (selection === 'all') {
-        setGameId(gamesQuery.data?.[0].id);
+        const firstGame = gamesQuery.data?.[0];
+        if (firstGame) {
+          setGameId(firstGame.id);
+        }
       } else {
         const selected = [...selection.keys()][0];
         if (gameId !== selected) {
-          setGameId(selected ? selected.toString() : undefined);
+          if (!selected) {
+            removeGameId();
+          } else {
+            setGameId(selected.toString());
+          }
         }
       }
     },
-    [gameId, gamesQuery.data, setGameId],
+    [gameId, gamesQuery.data, removeGameId, setGameId],
   );
   return (
     <div className="flex flex-col items-center gap-3">

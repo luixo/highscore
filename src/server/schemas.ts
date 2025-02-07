@@ -33,6 +33,8 @@ export const sortDirectionSchema = z.union([
 
 export const scoreFormatSchema = z.literal('Time');
 
+export const eventNameSchema = z.string().min(1).max(64);
+
 export const playerNameSchema = z.string().min(1).max(64);
 
 export const scoreSchema = z.coerce.number().positive();
@@ -58,3 +60,14 @@ export const scoreUpdateObject = z.discriminatedUnion('type', [
     score: scoreSchema,
   }),
 ]);
+
+export const moderatorKeys = z.preprocess((input) => {
+  try {
+    if (typeof input !== 'string') {
+      return {};
+    }
+    return JSON.parse(input);
+  } catch {
+    return {};
+  }
+}, z.record(moderatorKeySchema));
