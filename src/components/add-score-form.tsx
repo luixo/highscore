@@ -1,7 +1,11 @@
 import type { FC } from 'react';
 import { useCallback, useEffect, useMemo } from 'react';
-import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
-import { useForm } from 'react-hook-form';
+import type {
+  SubmitErrorHandler,
+  SubmitHandler,
+  UseFormReturn,
+} from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 import type { SharedSelection } from '@nextui-org/react';
 import {
   Button,
@@ -15,22 +19,52 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { trpc } from '~/utils/trpc';
 import type { EventId } from '~/server/schemas';
-import { playerNameSchema, scoreSchema } from '~/server/schemas';
+import { playerNameSchema, scoresSchema } from '~/server/schemas';
 import toast from 'react-hot-toast';
-import { formatScore, getInputLabel } from '~/utils/format';
+import { formatScore } from '~/utils/format';
 import { Game } from '~/components/game';
 import { collectErrors } from '~/utils/form';
 import { useLastGame } from '~/hooks/use-last-game';
+import { getAggregation, getFormatting } from '~/utils/jsons';
+import { aggregateScore } from '~/utils/aggregation';
 
 const formSchema = z.strictObject({
   playerName: playerNameSchema,
-  score: scoreSchema,
+  scores: scoresSchema,
 });
+
+type Form = z.infer<typeof formSchema>;
+
+const ScoresForm: FC<{ form: UseFormReturn<Form> }> = ({ form }) => {
+  const { fields, append } = useFieldArray({
+    control: form.control,
+    name: 'scores',
+  });
+  return (
+    <>
+      {fields.map((field, index) => (
+        <Input
+          key={field.id}
+          {...form.register(`scores.${index}.type`)}
+          type="number"
+          placeholder="74"
+          errorMessage={form.formState.errors.scores?.[
+            index
+          ]?.message?.toString()}
+          isInvalid={Boolean(form.formState.errors.scores?.[index]?.message)}
+        />
+      ))}
+      <Button onPress={() => append({ type: 'number', value: 0, key: 'x' })}>
+        +
+      </Button>
+    </>
+  );
+};
 
 export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const trpcUtils = trpc.useUtils();
   const { gameId, setGameId, removeGameId } = useLastGame(eventId);
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<Form>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
   });
@@ -40,32 +74,28 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
       const matchedGame = gamesCache?.find(
         (game) => game.id === variables.gameId,
       );
-      if (response.type === 'old') {
-        toast.error(
-          `Результат "${formatScore(variables.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}" для игрока "${variables.playerName}" не был добавлен, есть результат лучше: "${formatScore(response.result.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}"`,
-        );
-      } else {
+      if (matchedGame) {
         toast.success(
-          `Результат "${formatScore(response.result.score, matchedGame?.formatScore ?? undefined, matchedGame?.formatters)}" для игрока "${variables.playerName}" добавлен`,
+          `Результат "${formatScore(aggregateScore(variables.scores, getAggregation(matchedGame.aggregation)), getFormatting(matchedGame.formatting))}" для игрока "${variables.playerName}" добавлен`,
         );
       }
       form.reset();
     },
   });
-  const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(
+  const onSubmit = useCallback<SubmitHandler<Form>>(
     (data) => {
       if (!gameId) {
         return;
       }
       addScoreMutation.mutate({
         playerName: data.playerName,
-        score: data.score,
+        scores: data.scores,
         gameId,
       });
     },
     [addScoreMutation, gameId],
   );
-  const onError = useCallback<SubmitErrorHandler<z.infer<typeof formSchema>>>(
+  const onError = useCallback<SubmitErrorHandler<Form>>(
     (errors) => toast.error(collectErrors(errors).join('\n')),
     [],
   );
@@ -125,14 +155,7 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
           errorMessage={form.formState.errors.playerName?.message?.toString()}
           isInvalid={Boolean(form.formState.errors.playerName?.message)}
         />
-        <Input
-          {...form.register('score')}
-          label={getInputLabel(selectedGame?.formatters)}
-          type="number"
-          placeholder="74"
-          errorMessage={form.formState.errors.score?.message?.toString()}
-          isInvalid={Boolean(form.formState.errors.score?.message)}
-        />
+        <ScoresForm form={form} />
 
         <Tooltip
           isDisabled={form.formState.isValid}

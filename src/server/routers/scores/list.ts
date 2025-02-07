@@ -14,8 +14,7 @@ export const procedure = publicProcedure
     const scores = await prisma.score.findMany({
       select: {
         playerName: true,
-        score: true,
-        scoreCount: true,
+        values: true,
         createdAt: true,
         updatedAt: true,
         moderatorName: true,
@@ -23,9 +22,6 @@ export const procedure = publicProcedure
       },
       where: {
         gameId,
-      },
-      orderBy: {
-        score: 'desc',
       },
     });
     return scores;

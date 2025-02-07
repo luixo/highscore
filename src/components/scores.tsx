@@ -24,8 +24,16 @@ import { formatScore } from '~/utils/format';
 import { RemoveButton } from '~/components/remove-button';
 import { toast } from 'react-hot-toast';
 import { useIntervalEffect } from '@react-hookz/web';
-import { getAggregation } from '~/utils/aggregation';
 import type { Prisma } from '@prisma/client';
+import {
+  getAggregation,
+  getFormatting,
+  getScores,
+  getSort,
+} from '~/utils/jsons';
+import { aggregateScore } from '~/utils/aggregation';
+import type { z } from 'zod';
+import type { scoresSchema } from '~/server/schemas';
 
 const columns = [{ key: 'medal' }, { key: 'names' }, { key: 'score' }];
 const moderatorColumns = [...columns, { key: 'actions' }];
@@ -86,15 +94,17 @@ const ChangePlayerScoreModal: FC<{
   player:
     | {
         name: string;
-        score: number;
+        scores: z.infer<typeof scoresSchema>;
       }
     | undefined;
   onClose: () => void;
 }> = ({ gameId, player, onClose }) => {
-  const [localScore, setLocalScore] = useState<number>(player?.score ?? 0);
+  const [localScores, setLocalScores] = useState<z.infer<typeof scoresSchema>>(
+    player?.scores ?? [],
+  );
   useEffect(() => {
     if (player) {
-      setLocalScore(player.score);
+      setLocalScores(player.scores);
     }
   }, [player]);
   const updateScoreMutation = trpc.scores.update.useMutation({
@@ -105,7 +115,7 @@ const ChangePlayerScoreModal: FC<{
     },
   });
   const saveLocalPlayerName = useCallback(() => {
-    if (!player || !localScore) {
+    if (!player || !localScores) {
       return;
     }
     onClose();
@@ -113,11 +123,11 @@ const ChangePlayerScoreModal: FC<{
       playerName: player.name,
       gameId,
       updateObject: {
-        type: 'score',
-        score: localScore,
+        type: 'scores',
+        scores: localScores,
       },
     });
-  }, [player, localScore, onClose, updateScoreMutation, gameId]);
+  }, [player, localScores, onClose, updateScoreMutation, gameId]);
   if (!player) {
     return null;
   }
@@ -126,15 +136,23 @@ const ChangePlayerScoreModal: FC<{
       <ModalContent>
         <ModalHeader>Изменить очки игрока "{player.name}"</ModalHeader>
         <ModalBody className="w-full">
-          <Input
-            value={localScore.toString()}
-            onValueChange={(value) => setLocalScore(Number(value))}
-            type="number"
-          />
+          {localScores.map((localScore) => (
+            <Input
+              key={localScore.key}
+              value={localScore.value.toString()}
+              onValueChange={(value) =>
+                setLocalScores((prevScores) => ({
+                  ...prevScores,
+                  [localScore.key]: value,
+                }))
+              }
+              type="number"
+            />
+          ))}
           <Button
             color="primary"
             onPress={saveLocalPlayerName}
-            isDisabled={!localScore}
+            isDisabled={Object.keys(localScores).length === 0}
           >
             Сохранить
           </Button>
@@ -233,16 +251,19 @@ const ScoreBoard: FC<{
   game: Prisma.GameGetPayload<{}>;
 }> = ({ game, rawData }) => {
   const aggregation = getAggregation(game.aggregation);
-  const aggregatedData = rawData.map((element) => ({
-    score:
-      aggregation && aggregation.type === 'arithmetic'
-        ? element.score / element.scoreCount
-        : element.score,
-    playerName: element.playerName,
-    updatedAt: element.updatedAt,
-  }));
+  const sort = getSort(game.sort);
+  const formatting = getFormatting(game.formatting);
+  const aggregatedData = rawData.map((element) => {
+    const scores = getScores(element.values);
+    return {
+      scores,
+      score: aggregateScore(scores, aggregation),
+      playerName: element.playerName,
+      updatedAt: element.updatedAt,
+    };
+  });
   const sortedData = aggregatedData.sort((a, b) => {
-    if (game.sortDirection === 'Desc') {
+    if (sort.direction === 'desc') {
       return b.score - a.score;
     } else {
       return a.score - b.score;
@@ -279,7 +300,7 @@ const ScoreBoard: FC<{
   const [editPlayerNameModal, setEditPlayerNameModal] = useState<string>();
   const [editPlayerScoreModal, setEditPlayerScoreModal] = useState<{
     name: string;
-    score: number;
+    scores: z.infer<typeof scoresSchema>;
   }>();
   const [showInfoRecord, setShowInfoRecord] = useState<PackedScore>();
   const renderCell = useCallback(
@@ -358,7 +379,7 @@ const ScoreBoard: FC<{
                 }
                 setEditPlayerScoreModal({
                   name: firstPlayer.playerName,
-                  score: firstPlayer.score,
+                  scores: firstPlayer.scores,
                 });
               }}
               className={
@@ -367,11 +388,7 @@ const ScoreBoard: FC<{
                   : 'cursor-pointer'
               }
             >
-              {formatScore(
-                packedScore.score,
-                game.formatScore ?? undefined,
-                game.formatters,
-              )}
+              {formatScore(packedScore.score, formatting)}
             </div>
           );
         case 'actions':
@@ -390,13 +407,7 @@ const ScoreBoard: FC<{
           return null;
       }
     },
-    [
-      game.formatScore,
-      game.formatters,
-      game.id,
-      moderatorStatus,
-      removeScoreMutation,
-    ],
+    [formatting, game.id, moderatorStatus, removeScoreMutation],
   );
   return (
     <>
@@ -459,10 +470,10 @@ const ScoreBoard: FC<{
 type PackedScore = {
   score: number;
   index: number;
-  players: Pick<
-    Prisma.ScoreGetPayload<{}>,
-    'playerName' | 'score' | 'updatedAt'
-  >[];
+  players: (Pick<Prisma.ScoreGetPayload<{}>, 'playerName' | 'updatedAt'> & {
+    score: number;
+    scores: z.infer<typeof scoresSchema>;
+  })[];
 };
 
 export const Scores: FC<{

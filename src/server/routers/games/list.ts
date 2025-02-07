@@ -14,14 +14,14 @@ export const procedure = publicProcedure
       select: {
         id: true,
         title: true,
-        formatters: true,
         logoUrl: true,
-        sortDirection: true,
-        formatScore: true,
+        inputs: true,
+        formatting: true,
+        aggregation: true,
+        sort: true,
         createdAt: true,
         updatedAt: true,
         eventId: true,
-        aggregation: true,
       },
       where: {
         eventId,

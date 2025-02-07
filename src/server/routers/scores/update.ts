@@ -29,13 +29,11 @@ export const procedure = adminProcedure
           ? {
               playerName: updateObject.playerName,
             }
-          : updateObject.type === 'scoreCount'
+          : updateObject.type === 'scores'
             ? {
-                scoreCount: updateObject.scoreCount,
+                values: updateObject.scores,
               }
-            : {
-                score: updateObject.score,
-              },
+            : {},
     });
     await pushEvent('score:upsert', { gameId, playerName, score });
   });

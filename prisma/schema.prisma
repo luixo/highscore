@@ -22,12 +22,13 @@ model Game {
   title String
   scores Score[]
   logoUrl String?
-  formatters Json
   event Event @relation(fields: [eventId], references: [id])
   eventId String
-  sortDirection Direction @default(Desc)
-  formatScore ScoreFormat?
+
+  sort Json?
+  formatting Json?
   aggregation Json?
+  inputs Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -53,8 +54,7 @@ model Score {
   moderatorName String
 
   playerName String
-  score Float
-  scoreCount Int
+  values Json
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -65,13 +65,4 @@ model Score {
 enum ModeratorRole {
   Moderator
   Admin
-}
-
-enum Direction {
-  Asc
-  Desc
-}
-
-enum ScoreFormat {
-  Time
 }

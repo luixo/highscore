@@ -2,36 +2,20 @@ import { protectedProcedure } from '~/server/trpc';
 import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 
-import { gameIdSchema, playerNameSchema, scoreSchema } from '~/server/schemas';
+import { gameIdSchema, playerNameSchema, scoresSchema } from '~/server/schemas';
 import { pushEvent } from '~/server/pusher';
-import { getAggregation } from '~/utils/aggregation';
+import { getScores } from '~/utils/jsons';
 
 export const procedure = protectedProcedure
   .input(
     z.object({
       gameId: gameIdSchema,
       playerName: playerNameSchema,
-      score: scoreSchema,
+      scores: scoresSchema,
     }),
   )
-  .output(
-    z.discriminatedUnion('type', [
-      z.strictObject({
-        type: z.literal('old'),
-        result: z.object({
-          score: scoreSchema,
-        }),
-      }),
-      z.strictObject({
-        type: z.literal('new'),
-        result: z.object({
-          score: scoreSchema,
-        }),
-      }),
-    ]),
-  )
-  .mutation(async ({ input: { gameId, playerName, score }, ctx }) => {
-    const matchedPlayer = await prisma.score.findFirst({
+  .mutation(async ({ input: { gameId, playerName, scores: values }, ctx }) => {
+    const matchedScore = await prisma.score.findFirst({
       where: {
         gameId,
         playerName: {
@@ -41,15 +25,13 @@ export const procedure = protectedProcedure
       },
       select: {
         playerName: true,
-        score: true,
-        scoreCount: true,
+        values: true,
         game: true,
       },
     });
-    const playerNameInsensitive = matchedPlayer
-      ? matchedPlayer.playerName
+    const playerNameInsensitive = matchedScore
+      ? matchedScore.playerName
       : playerName;
-    const aggregation = getAggregation(matchedPlayer?.game.aggregation);
     const result = await prisma.score.upsert({
       where: {
         gamePlayerIdentifier: {
@@ -60,41 +42,27 @@ export const procedure = protectedProcedure
       create: {
         gameId,
         playerName: playerNameInsensitive,
-        score,
+        values: values.map((scoreValue) => {
+          if (scoreValue.type === 'counter') {
+            const matchedValue = getScores(matchedScore?.values).find(
+              (score) => score.key === scoreValue.key,
+            );
+            if (!matchedValue) {
+              return scoreValue;
+            }
+            return {
+              ...scoreValue,
+              value: scoreValue.value + matchedValue.value,
+            };
+          }
+          return scoreValue;
+        }),
         moderatorName: ctx.session.name,
-        scoreCount: 1,
       },
       update: {
-        score:
-          aggregation && aggregation.type === 'arithmetic'
-            ? (matchedPlayer?.score ?? 0) + score
-            : score,
-        scoreCount: (matchedPlayer?.scoreCount ?? 0) + 1,
+        values,
       },
     });
 
     await pushEvent('score:upsert', { gameId, playerName, score: result });
-    if (matchedPlayer) {
-      if (!aggregation || aggregation.type !== 'arithmetic') {
-        switch (matchedPlayer.game.sortDirection) {
-          case 'Asc':
-            if (matchedPlayer.score <= score) {
-              return {
-                type: 'old',
-                result: { score: matchedPlayer.score },
-              };
-            }
-            break;
-          case 'Desc':
-            if (matchedPlayer.score >= score) {
-              return {
-                type: 'old',
-                result: { score: matchedPlayer.score },
-              };
-            }
-            break;
-        }
-      }
-    }
-    return { type: 'new' as const, result: { score: result.score } };
   });

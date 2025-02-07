@@ -11,18 +11,12 @@ test('get list of games', async () => {
     {
       id: 'unknown',
       title: 'Demo',
-      formatters: {
-        serializers: {
-          one: '%s coin',
-          some: '%s coins',
-          many: '%s coins',
-        },
-      },
+      formatting: null,
+      inputs: null,
       logoUrl: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-      sortDirection: 'Asc',
-      formatScore: null,
+      sort: null,
       eventId: 'unknown',
       aggregation: null,
     },

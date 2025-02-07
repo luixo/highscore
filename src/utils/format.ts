@@ -1,79 +1,46 @@
-import type { JsonValue } from '@prisma/client/runtime/library';
-
 import formatDuration from 'format-duration';
+import type { z } from 'zod';
+import type { formattingSchema } from '~/server/schemas';
 
-type ScoreFormat = 'Time';
+export const DEFAULT_PRECISION = 6;
 
-const formatScoreWith = (
-  scoreFormat: ScoreFormat | undefined,
-  score: number,
+const pluralize = (
+  value: number,
+  plurals: Record<'one' | 'some' | 'many', string>,
 ) => {
-  if (scoreFormat === 'Time') {
-    return formatDuration(score * 1000, { ms: true }).slice(0, -1);
+  if (value % 10 === 1 && value % 100 !== 11) {
+    return plurals.one;
+  } else if (
+    value % 10 >= 2 &&
+    value % 10 <= 4 &&
+    (value % 100 < 10 || value % 100 >= 20)
+  ) {
+    return plurals.some;
+  } else {
+    return plurals.many;
   }
-  return score.toPrecision(6);
 };
-
-const getSerializer =
-  (
-    serializers: Record<string, unknown>,
-    scoreFormat: ScoreFormat | undefined,
-    key: string,
-  ) =>
-  (value: number) => {
-    if (key in serializers && typeof serializers[key] === 'string') {
-      return serializers[key].replace(
-        '%s',
-        formatScoreWith(scoreFormat, value),
-      );
-    }
-    return formatScoreWith(scoreFormat, value);
-  };
-
-const getSerializers = (
-  serializers: Record<string, unknown>,
-  scoreFormat: ScoreFormat | undefined,
-) => ({
-  one: getSerializer(serializers, scoreFormat, 'one'),
-  some: getSerializer(serializers, scoreFormat, 'some'),
-  many: getSerializer(serializers, scoreFormat, 'many'),
-});
 
 export const formatScore = (
   score: number,
-  scoreFormat: ScoreFormat | undefined,
-  formatters?: JsonValue,
+  formatting: z.infer<typeof formattingSchema>,
 ) => {
-  const serializersRaw =
-    typeof formatters === 'object' && formatters && 'serializers' in formatters
-      ? formatters.serializers
-      : undefined;
-  if (
-    !serializersRaw ||
-    typeof serializersRaw !== 'object' ||
-    Array.isArray(serializersRaw)
-  ) {
-    return formatScoreWith(scoreFormat, score);
-  }
-  const serializers = getSerializers(serializersRaw, scoreFormat);
-  if (score % 10 === 1 && score % 100 !== 11) {
-    return serializers.one(score);
-  } else if (
-    score % 10 >= 2 &&
-    score % 10 <= 4 &&
-    (score % 100 < 10 || score % 100 >= 20)
-  ) {
-    return serializers.some(score);
-  } else {
-    return serializers.many(score);
-  }
-};
-
-export const getInputLabel = (formatters?: JsonValue) => {
-  if (!formatters || typeof formatters !== 'object') {
-    return 'Очков / Секунд';
-  }
-  if ('inputLabel' in formatters && typeof formatters.inputLabel === 'string') {
-    return formatters.inputLabel;
+  switch (formatting.type) {
+    case 'time':
+      return formatDuration(score * 1000, { ms: true }).slice(0, -1);
+    case 'regex':
+      return formatting.regex
+        .replaceAll(/\{.*?\|.*?\|.*?\}/g, (match) => {
+          const pluralizers = match.slice(1, -1).split('|');
+          return pluralize(score, {
+            one: pluralizers[0] ?? '_one_',
+            some: pluralizers[1] ?? '_some_',
+            many: pluralizers[2] ?? '_many_',
+          });
+        })
+        .replaceAll(
+          /%value%/g,
+          score.toPrecision(formatting.precision ?? DEFAULT_PRECISION),
+        );
   }
 };
