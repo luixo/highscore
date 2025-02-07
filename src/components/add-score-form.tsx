@@ -205,7 +205,7 @@ export const AddScoreForm: FC<{ eventId: EventId }> = ({ eventId }) => {
         ))}
       </Select>
       {selectedGame ? (
-        <SelectedGameForm game={selectedGame} />
+        <SelectedGameForm key={selectedGame.id} game={selectedGame} />
       ) : (
         <Spinner size="lg" />
       )}
