@@ -17,7 +17,7 @@ export const procedure = adminProcedure
     }),
   )
   .mutation(async ({ input: { gameId, playerName, updateObject } }) => {
-    await prisma.score.update({
+    const score = await prisma.score.update({
       where: {
         gamePlayerIdentifier: {
           gameId,
@@ -29,9 +29,13 @@ export const procedure = adminProcedure
           ? {
               playerName: updateObject.playerName,
             }
-          : {
-              score: updateObject.score,
-            },
+          : updateObject.type === 'scoreCount'
+            ? {
+                scoreCount: updateObject.scoreCount,
+              }
+            : {
+                score: updateObject.score,
+              },
     });
-    await pushEvent('score:updated', { gameId, playerName, updateObject });
+    await pushEvent('score:upsert', { gameId, playerName, score });
   });

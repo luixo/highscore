@@ -4,6 +4,7 @@ import { prisma } from '~/server/prisma';
 
 import { gameIdSchema, playerNameSchema, scoreSchema } from '~/server/schemas';
 import { pushEvent } from '~/server/pusher';
+import { getAggregation } from '~/utils/aggregation';
 
 export const procedure = protectedProcedure
   .input(
@@ -30,7 +31,6 @@ export const procedure = protectedProcedure
     ]),
   )
   .mutation(async ({ input: { gameId, playerName, score }, ctx }) => {
-    let playerNameInsensitive = playerName;
     const matchedPlayer = await prisma.score.findFirst({
       where: {
         gameId,
@@ -42,29 +42,14 @@ export const procedure = protectedProcedure
       select: {
         playerName: true,
         score: true,
+        scoreCount: true,
         game: true,
       },
     });
-    if (matchedPlayer) {
-      playerNameInsensitive = matchedPlayer.playerName;
-      if (matchedPlayer.score) {
-        if (matchedPlayer.game.sortDirection === 'Asc') {
-          if (matchedPlayer.score <= score) {
-            return {
-              type: 'old',
-              result: { score: matchedPlayer.score },
-            };
-          }
-        } else {
-          if (matchedPlayer.score >= score) {
-            return {
-              type: 'old',
-              result: { score: matchedPlayer.score },
-            };
-          }
-        }
-      }
-    }
+    const playerNameInsensitive = matchedPlayer
+      ? matchedPlayer.playerName
+      : playerName;
+    const aggregation = getAggregation(matchedPlayer?.game.aggregation);
     const result = await prisma.score.upsert({
       where: {
         gamePlayerIdentifier: {
@@ -77,11 +62,39 @@ export const procedure = protectedProcedure
         playerName: playerNameInsensitive,
         score,
         moderatorName: ctx.session.name,
+        scoreCount: 1,
       },
       update: {
-        score,
+        score:
+          aggregation && aggregation.type === 'arithmetic'
+            ? (matchedPlayer?.score ?? 0) + score
+            : score,
+        scoreCount: (matchedPlayer?.scoreCount ?? 0) + 1,
       },
     });
-    await pushEvent('score:added', { gameId, score: result });
-    return { type: 'new', result: { score: result.score } };
+
+    await pushEvent('score:upsert', { gameId, playerName, score: result });
+    if (matchedPlayer) {
+      if (!aggregation || aggregation.type !== 'arithmetic') {
+        switch (matchedPlayer.game.sortDirection) {
+          case 'Asc':
+            if (matchedPlayer.score <= score) {
+              return {
+                type: 'old',
+                result: { score: matchedPlayer.score },
+              };
+            }
+            break;
+          case 'Desc':
+            if (matchedPlayer.score >= score) {
+              return {
+                type: 'old',
+                result: { score: matchedPlayer.score },
+              };
+            }
+            break;
+        }
+      }
+    }
+    return { type: 'new' as const, result: { score: result.score } };
   });

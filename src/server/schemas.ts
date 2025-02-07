@@ -39,6 +39,8 @@ export const playerNameSchema = z.string().min(1).max(64);
 
 export const scoreSchema = z.coerce.number().positive();
 
+export const scoreCountSchema = z.coerce.number().int().positive();
+
 export const moderatorKeySchema = z.string().min(2).max(64);
 
 export const moderatorNameSchema = z.string().min(3).max(64);
@@ -59,6 +61,10 @@ export const scoreUpdateObject = z.discriminatedUnion('type', [
     type: z.literal('score'),
     score: scoreSchema,
   }),
+  z.object({
+    type: z.literal('scoreCount'),
+    scoreCount: scoreCountSchema,
+  }),
 ]);
 
 export const moderatorKeys = z.preprocess((input) => {
@@ -71,3 +77,17 @@ export const moderatorKeys = z.preprocess((input) => {
     return {};
   }
 }, z.record(moderatorKeySchema));
+
+export const aggregationSchema = z.discriminatedUnion('type', [
+  z.strictObject({ type: z.literal('arithmetic') }),
+]);
+
+export const addGameSchema = z.object({
+  eventId: eventIdSchema,
+  title: gameTitleSchema,
+  formatters: formattersSchema,
+  logoUrl: logoUrlSchema,
+  sortDirection: sortDirectionSchema,
+  scoreFormat: scoreFormatSchema.optional(),
+  aggregation: aggregationSchema.optional(),
+});

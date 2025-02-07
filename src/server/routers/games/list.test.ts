@@ -24,6 +24,7 @@ test('get list of games', async () => {
       sortDirection: 'Asc',
       formatScore: null,
       eventId: 'unknown',
+      aggregation: null,
     },
   ]);
 });

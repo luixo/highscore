@@ -21,6 +21,7 @@ export const procedure = publicProcedure
         createdAt: true,
         updatedAt: true,
         eventId: true,
+        aggregation: true,
       },
       where: {
         eventId,

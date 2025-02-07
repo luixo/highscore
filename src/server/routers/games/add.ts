@@ -1,28 +1,12 @@
 import { adminProcedure } from '~/server/trpc';
-import { z } from 'zod';
 import { prisma } from '~/server/prisma';
 
-import {
-  gameTitleSchema,
-  logoUrlSchema,
-  formattersSchema,
-  sortDirectionSchema,
-  scoreFormatSchema,
-  eventIdSchema,
-} from '~/server/schemas';
+import { addGameSchema } from '~/server/schemas';
 import { pushEvent } from '~/server/pusher';
+import { Prisma } from '@prisma/client';
 
 export const procedure = adminProcedure
-  .input(
-    z.object({
-      eventId: eventIdSchema,
-      title: gameTitleSchema,
-      formatters: formattersSchema,
-      logoUrl: logoUrlSchema,
-      sortDirection: sortDirectionSchema,
-      scoreFormat: scoreFormatSchema.optional(),
-    }),
-  )
+  .input(addGameSchema)
   .mutation(
     async ({
       input: {
@@ -32,6 +16,7 @@ export const procedure = adminProcedure
         logoUrl,
         sortDirection,
         scoreFormat,
+        aggregation,
       },
     }) => {
       const game = await prisma.game.create({
@@ -42,6 +27,7 @@ export const procedure = adminProcedure
           logoUrl,
           sortDirection,
           formatScore: scoreFormat,
+          aggregation: aggregation ?? Prisma.JsonNull,
         },
         select: {
           id: true,
@@ -53,6 +39,7 @@ export const procedure = adminProcedure
           createdAt: true,
           updatedAt: true,
           eventId: true,
+          aggregation: true,
         },
       });
       await pushEvent('game:added', { game });

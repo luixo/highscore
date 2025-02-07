@@ -1,26 +1,21 @@
-import type { inferProcedureOutput } from '@trpc/server';
+import type { Prisma } from '@prisma/client';
 import type { z } from 'zod';
-import type { AppRouter } from '~/server/routers/_app';
-import type { gameUpdateObject, scoreUpdateObject } from '~/server/schemas';
+import type { gameUpdateObject } from '~/server/schemas';
 
 export const getChannelName = () => 'highscore';
 
 export type PusherMapping = {
-  'score:added': {
+  'score:upsert': {
     gameId: string;
-    score: inferProcedureOutput<AppRouter['scores']['list']>[number];
+    playerName: string;
+    score: Prisma.ScoreGetPayload<{}>;
   };
   'score:removed': {
     gameId: string;
     playerName: string;
   };
-  'score:updated': {
-    gameId: string;
-    playerName: string;
-    updateObject: z.infer<typeof scoreUpdateObject>;
-  };
   'game:added': {
-    game: inferProcedureOutput<AppRouter['games']['list']>[number];
+    game: Prisma.GameGetPayload<{}>;
   };
   'game:removed': {
     id: string;

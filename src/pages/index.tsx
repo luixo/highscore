@@ -4,15 +4,27 @@ import { useVisitedEvents } from '~/hooks/use-visited-events';
 import type { NextPageWithLayout } from '~/pages/_app';
 import { trpc } from '~/utils/trpc';
 import { CiPlay1 } from 'react-icons/ci';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CreateEventModal } from '~/components/create-event-modal';
 
 const IndexPage: NextPageWithLayout = () => {
-  const { events } = useVisitedEvents();
+  const { events, removeEvent } = useVisitedEvents();
   const firstMount = useFirstMountState();
   const eventsQueries = trpc.useQueries((t) =>
     events.map((event) => t.events.get({ id: event.eventId })),
   );
+  useEffect(() => {
+    const erroredQueriesIndices = eventsQueries
+      .map((query, index) => [query, index] as const)
+      .filter(([query]) => query.error?.data?.code === 'NOT_FOUND')
+      .map(([, index]) => index);
+    if (erroredQueriesIndices.length === 0) {
+      return;
+    }
+    erroredQueriesIndices.forEach((index) => {
+      removeEvent(events[index].eventId);
+    });
+  }, [events, eventsQueries, removeEvent]);
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between gap-2">

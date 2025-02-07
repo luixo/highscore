@@ -30,6 +30,7 @@ export default tseslint.config(
       ],
 
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-empty-object-type': 'off',
       // Consider removing these rule disables for more type safety in your app ✨
       '@typescript-eslint/no-confusing-void-expression': 'off',
       '@typescript-eslint/no-explicit-any': 'off',

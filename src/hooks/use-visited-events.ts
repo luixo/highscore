@@ -15,32 +15,31 @@ export const useVisitedEvents = () => {
     events,
     removeEvent: useCallback(
       (id: string) => {
-        setEvents((prevEvents = []) => {
-          prevEvents = prevEvents ?? [];
-          return prevEvents.filter((event) => event.eventId === id);
-        });
+        setEvents((prevEvents) =>
+          (prevEvents ?? []).filter((event) => event.eventId !== id),
+        );
       },
       [setEvents],
     ),
     upsertEvent: useCallback(
       (id: string) => {
         setEvents((prevEvents) => {
-          prevEvents = prevEvents ?? [];
+          const nextEvents = prevEvents ?? [];
           const event = {
             eventId: id,
             lastVisited: Date.now(),
           };
-          const eventIndex = prevEvents.findIndex(
+          const eventIndex = nextEvents.findIndex(
             (event) => event.eventId === id,
           );
           if (eventIndex !== -1) {
             return [
-              ...prevEvents.slice(0, eventIndex),
+              ...nextEvents.slice(0, eventIndex),
               event,
-              ...prevEvents.slice(eventIndex + 1),
+              ...nextEvents.slice(eventIndex + 1),
             ];
           }
-          return [...prevEvents, event];
+          return [...nextEvents, event];
         });
       },
       [setEvents],

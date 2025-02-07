@@ -2,7 +2,7 @@ import { trpc } from '~/utils/trpc';
 import { LoginModal } from '~/components/login-modal';
 import { usePusher } from '~/hooks/use-pusher';
 import { AllTabs } from '~/components/all-tabs';
-import { CiHome, CiRedo } from 'react-icons/ci';
+import { CiHome } from 'react-icons/ci';
 import { useCallback, useEffect } from 'react';
 import { Button, Spinner } from '@nextui-org/react';
 import type { NextPageWithLayout } from '~/pages/_app';
@@ -60,9 +60,6 @@ const EventPage: NextPageWithLayout = () => {
     });
   });
 
-  const invalidateQueries = useCallback(() => {
-    trpcUtils.invalidate();
-  }, [trpcUtils]);
   const navigateHome = useCallback(() => {
     router.push('/');
   }, [router]);
@@ -85,12 +82,7 @@ const EventPage: NextPageWithLayout = () => {
             <span>{eventQuery.data.title}</span>
           ) : null}
         </div>
-        <div className="flex gap-2">
-          <Button color="warning" variant="bordered" isIconOnly>
-            <CiRedo onClick={invalidateQueries} size={20} />
-          </Button>
-          <LoginModal eventId={eventId} />
-        </div>
+        <LoginModal eventId={eventId} />
       </div>
       <div>
         <AllTabs eventId={eventId} />

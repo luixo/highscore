@@ -15,9 +15,11 @@ export const procedure = publicProcedure
       select: {
         playerName: true,
         score: true,
+        scoreCount: true,
         createdAt: true,
         updatedAt: true,
         moderatorName: true,
+        gameId: true,
       },
       where: {
         gameId,

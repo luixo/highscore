@@ -14,11 +14,9 @@ import {
   TableRow,
 } from '@nextui-org/react';
 import { CiMedal } from 'react-icons/ci';
-import type { inferProcedureOutput } from '@trpc/server';
 import type { FC } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 
-import type { AppRouter } from '~/server/routers/_app';
 import { trpc } from '~/utils/trpc';
 import { usePusher } from '~/hooks/use-pusher';
 import { useModeratorStatus } from '~/hooks/use-moderator-status';
@@ -26,6 +24,8 @@ import { formatScore } from '~/utils/format';
 import { RemoveButton } from '~/components/remove-button';
 import { toast } from 'react-hot-toast';
 import { useIntervalEffect } from '@react-hookz/web';
+import { getAggregation } from '~/utils/aggregation';
+import type { Prisma } from '@prisma/client';
 
 const columns = [{ key: 'medal' }, { key: 'names' }, { key: 'score' }];
 const moderatorColumns = [...columns, { key: 'actions' }];
@@ -41,10 +41,10 @@ const RenamePlayerModal: FC<{
       setLocalName(playerName);
     }
   }, [playerName]);
-  const updateScoreMutation = trpc.scores.update.useMutation({
+  const updateNameMutation = trpc.scores.update.useMutation({
     onSuccess: (_result, variables) => {
       toast.success(
-        `Рекорд игрока "${variables.playerName}" обновлен: "${JSON.stringify(variables.updateObject)}"`,
+        `Имя игрока "${variables.playerName}" обновлено: "${JSON.stringify(variables.updateObject)}"`,
       );
     },
   });
@@ -53,7 +53,7 @@ const RenamePlayerModal: FC<{
       return;
     }
     onClose();
-    updateScoreMutation.mutate({
+    updateNameMutation.mutate({
       playerName: playerName,
       gameId,
       updateObject: {
@@ -61,7 +61,7 @@ const RenamePlayerModal: FC<{
         playerName: localName,
       },
     });
-  }, [playerName, localName, onClose, updateScoreMutation, gameId]);
+  }, [playerName, localName, onClose, updateNameMutation, gameId]);
   return (
     <Modal isOpen={Boolean(playerName)} onOpenChange={onClose}>
       <ModalContent>
@@ -229,17 +229,26 @@ const getColor = (delta: number) => {
 };
 
 const ScoreBoard: FC<{
-  rawData: inferProcedureOutput<AppRouter['scores']['list']>;
-  game: inferProcedureOutput<AppRouter['games']['list']>[number];
+  rawData: Prisma.ScoreGetPayload<{}>[];
+  game: Prisma.GameGetPayload<{}>;
 }> = ({ game, rawData }) => {
-  const data = [...rawData].sort((a, b) => {
+  const aggregation = getAggregation(game.aggregation);
+  const aggregatedData = rawData.map((element) => ({
+    score:
+      aggregation && aggregation.type === 'arithmetic'
+        ? element.score / element.scoreCount
+        : element.score,
+    playerName: element.playerName,
+    updatedAt: element.updatedAt,
+  }));
+  const sortedData = aggregatedData.sort((a, b) => {
     if (game.sortDirection === 'Desc') {
       return b.score - a.score;
     } else {
       return a.score - b.score;
     }
   });
-  const packedData = data.reduce<PackedScore[]>((acc, element) => {
+  const packedData = sortedData.reduce<PackedScore[]>((acc, element) => {
     const lastElement = acc.pop();
     if (!lastElement) {
       return [{ index: 0, score: element.score, players: [element] }];
@@ -450,37 +459,42 @@ const ScoreBoard: FC<{
 type PackedScore = {
   score: number;
   index: number;
-  players: inferProcedureOutput<AppRouter['scores']['list']>;
+  players: Pick<
+    Prisma.ScoreGetPayload<{}>,
+    'playerName' | 'score' | 'updatedAt'
+  >[];
 };
 
 export const Scores: FC<{
-  game: inferProcedureOutput<AppRouter['games']['list']>[number];
+  game: Prisma.GameGetPayload<{}>;
 }> = ({ game }) => {
   const trpcUtils = trpc.useUtils();
   const scoresQuery = trpc.scores.list.useQuery({ gameId: game.id });
-  usePusher('score:added', ({ score: newScore, gameId: scoreGameId }) => {
-    if (scoreGameId !== game.id) {
-      return;
-    }
-    trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
-      if (!prevData) {
+  usePusher(
+    'score:upsert',
+    ({ score: newScore, playerName, gameId: scoreGameId }) => {
+      if (scoreGameId !== game.id) {
         return;
       }
-      const matchedIndex = prevData.findIndex(
-        (element) =>
-          element.playerName.toLowerCase() ===
-          newScore.playerName.toLowerCase(),
-      );
-      if (matchedIndex === -1) {
-        return [...prevData, newScore];
-      }
-      return [
-        ...prevData.slice(0, matchedIndex),
-        newScore,
-        ...prevData.slice(matchedIndex + 1),
-      ];
-    });
-  });
+      trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
+        if (!prevData) {
+          return;
+        }
+        const matchedIndex = prevData.findIndex(
+          (element) =>
+            element.playerName.toLowerCase() === playerName.toLowerCase(),
+        );
+        if (matchedIndex === -1) {
+          return [...prevData, newScore];
+        }
+        return [
+          ...prevData.slice(0, matchedIndex),
+          newScore,
+          ...prevData.slice(matchedIndex + 1),
+        ];
+      });
+    },
+  );
   usePusher('score:removed', ({ playerName, gameId: scoreGameId }) => {
     if (scoreGameId !== game.id) {
       return;
@@ -495,36 +509,6 @@ export const Scores: FC<{
       );
     });
   });
-  usePusher(
-    'score:updated',
-    ({ playerName, gameId: scoreGameId, updateObject }) => {
-      if (scoreGameId !== game.id) {
-        return;
-      }
-      trpcUtils.scores.list.setData({ gameId: game.id }, (prevData) => {
-        if (!prevData) {
-          return;
-        }
-        const matchedIndex = prevData.findIndex(
-          (element) =>
-            element.playerName.toLowerCase() === playerName.toLowerCase(),
-        );
-        if (matchedIndex === -1) {
-          return prevData;
-        }
-        return [
-          ...prevData.slice(0, matchedIndex),
-          {
-            ...prevData[matchedIndex],
-            ...(updateObject.type === 'playerName'
-              ? { playerName: updateObject.playerName }
-              : { score: updateObject.score }),
-          },
-          ...prevData.slice(matchedIndex + 1),
-        ];
-      });
-    },
-  );
   switch (scoresQuery.status) {
     case 'pending':
       return <Spinner />;

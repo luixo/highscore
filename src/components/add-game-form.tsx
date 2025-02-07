@@ -11,26 +11,14 @@ import {
 import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { EventId } from '~/server/schemas';
-import {
-  gameTitleSchema,
-  logoUrlSchema,
-  formattersSchema,
-  sortDirectionSchema,
-  scoreFormatSchema,
-} from '~/server/schemas';
+import { addGameSchema } from '~/server/schemas';
 import { trpc } from '~/utils/trpc';
 import { toast } from 'react-hot-toast';
 import { collectErrors } from '~/utils/form';
 
-const formSchema = z.strictObject({
-  title: gameTitleSchema,
-  formatters: formattersSchema,
-  logoUrl: logoUrlSchema,
-  sortDirection: sortDirectionSchema,
-  scoreFormat: scoreFormatSchema.optional(),
-});
+const formSchema = addGameSchema.omit({ eventId: true });
 
 export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   const form = useForm<z.infer<typeof formSchema>>({
@@ -45,14 +33,7 @@ export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
   });
   const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(
     (data) => {
-      addGameMutation.mutate({
-        eventId: eventId,
-        title: data.title,
-        formatters: data.formatters,
-        logoUrl: data.logoUrl,
-        sortDirection: data.sortDirection,
-        scoreFormat: data.scoreFormat,
-      });
+      addGameMutation.mutate({ eventId: eventId, ...data });
     },
     [addGameMutation, eventId],
   );
@@ -165,6 +146,34 @@ export const AddGameForm: FC<{ eventId: EventId }> = ({ eventId }) => {
           >
             <SelectItem key="Time" value="Time">
               Как время
+            </SelectItem>
+          </Select>
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="aggregation"
+        render={({ field }) => (
+          <Select
+            label="Агрегация результатов"
+            placeholder="Агрегация результатов"
+            selectedKeys={field.value ? [field.value.type] : []}
+            variant="bordered"
+            onSelectionChange={(selection) => {
+              if (selection === 'all') {
+                field.onChange();
+              } else {
+                const selected = [...selection.keys()][0];
+                field.onChange(
+                  selected === 'arithmetic'
+                    ? { type: 'arithmetic' }
+                    : undefined,
+                );
+              }
+            }}
+          >
+            <SelectItem key="arithmetic" value="arithmetic">
+              Арифметически среднее
             </SelectItem>
           </Select>
         )}

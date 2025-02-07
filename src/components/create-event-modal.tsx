@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { CiCirclePlus } from 'react-icons/ci';
 import {
   Button,
@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 import type { SubmitErrorHandler, SubmitHandler } from 'react-hook-form';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
+import { ModeratorContext } from '~/components/moderator-context';
 
 const formSchema = z.strictObject({
   title: eventNameSchema,
@@ -39,11 +40,13 @@ export const CreateEventModal: FC = () => {
     resolver: zodResolver(formSchema),
     mode: 'onChange',
   });
+  const [, setKeys] = useContext(ModeratorContext);
   const addEventMutation = trpc.events.add.useMutation({
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       toast.success(`Событие "${result.title}" добавлено`);
       form.reset();
       router.push(`/events/${result.id}`);
+      setKeys((prevKeys) => ({ ...prevKeys, [result.id]: variables.adminKey }));
     },
   });
   const onSubmit = useCallback<SubmitHandler<z.infer<typeof formSchema>>>(

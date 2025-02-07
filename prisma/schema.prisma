@@ -27,6 +27,7 @@ model Game {
   eventId String
   sortDirection Direction @default(Desc)
   formatScore ScoreFormat?
+  aggregation Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -53,6 +54,7 @@ model Score {
 
   playerName String
   score Float
+  scoreCount Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
