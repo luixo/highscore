@@ -17,22 +17,20 @@ export const Game: FC<{
       toast.success(`Игра "${variables.id}" удалена.`);
     },
   });
-  const [isImageError, setImageError] = useState(false);
-  useEffect(() => {
-    setImageError(false);
-  }, [game.logoUrl]);
+  const [imageStatus, setImageStatus] = useState('idle');
   return (
     <Card className="min-h-[250px] w-[320px] lg:w-[240px]">
       <CardHeader className="relative flex h-[50px] justify-between gap-2 overflow-hidden bg-slate-300">
         {game.logoUrl ? (
           <img
-            className={`absolute inset-0 -z-20 w-full ${isImageError ? 'hidden' : ''}`}
+            className={`absolute inset-0 -z-20 w-full ${imageStatus ? 'hidden' : ''}`}
             src={game.logoUrl}
             alt={game.title}
-            onError={() => setImageError(true)}
+            onError={() => setImageStatus('error')}
+            onLoad={() => setImageStatus('success')}
           />
         ) : null}
-        <h3>{game.title}</h3>
+        {imageStatus === 'success' ? null : <h3>{game.title}</h3>}
         {moderatorStatus === 'Admin' ? (
           <RemoveButton
             onClick={() =>
