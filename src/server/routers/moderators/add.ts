@@ -19,6 +19,7 @@ export const procedure = adminProcedure
   .mutation(async ({ input: { eventId, key, name } }) => {
     const result = await prisma.moderator.upsert({
       where: {
+        eventId,
         key: key.toLowerCase(),
       },
       create: {
@@ -27,7 +28,15 @@ export const procedure = adminProcedure
         name,
         role: 'Moderator',
       },
-      update: {},
+      update: {
+        name: name + '1',
+      },
+    });
+    console.log('res', {
+      eventId,
+      key: key.toLowerCase(),
+      name,
+      role: 'Moderator',
     });
     return result;
   });
