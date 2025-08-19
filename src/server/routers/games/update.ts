@@ -1,8 +1,9 @@
-import { adminProcedure } from '~/server/trpc';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import { gameIdSchema, gameUpdateObject } from '~/server/schemas';
-import { pushEvent } from '~/server/pusher';
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import { gameIdSchema, gameUpdateObject } from "~/server/schemas";
+import { pushEvent } from "~/server/subscription";
+import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(
@@ -12,13 +13,13 @@ export const procedure = adminProcedure
     }),
   )
   .mutation(async ({ input: { gameId, updateObject } }) => {
-    await prisma.game.update({
-      where: {
-        id: gameId,
-      },
-      data: {
+    const db = getDatabase();
+    await db
+      .updateTable("games")
+      .where("id", "=", gameId)
+      .set({
         title: updateObject.title,
-      },
-    });
-    await pushEvent('game:updated', { id: gameId, updateObject });
+      })
+      .executeTakeFirst();
+    await pushEvent("game:updated", { id: gameId, updateObject });
   });

@@ -1,1 +1,6 @@
-export const MODERATOR_COOKIE_KEYS = 'moderator-keys';
+import { parse } from "cookie";
+
+export const getCookie = (
+  cookieHeader: string | undefined,
+  cookieName: string,
+): string | undefined => parse(cookieHeader ?? "")[cookieName];

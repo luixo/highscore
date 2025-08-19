@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "Game" ALTER COLUMN "logoUrl" DROP NOT NULL;

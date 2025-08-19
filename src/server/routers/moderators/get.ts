@@ -1,6 +1,7 @@
-import { z } from 'zod';
-import { eventIdSchema } from '~/server/schemas';
-import { protectedProcedure } from '~/server/trpc';
+import { z } from "zod";
+
+import { eventIdSchema } from "~/server/schemas";
+import { protectedProcedure } from "~/server/trpc";
 
 export const procedure = protectedProcedure
   .input(

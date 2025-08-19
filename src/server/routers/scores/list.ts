@@ -1,8 +1,9 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { publicProcedure } from '~/server/trpc';
-import { prisma } from '~/server/prisma';
-import { gameIdSchema } from '~/server/schemas';
+import { getDatabase } from "~/server/database/database";
+import { getScores } from "~/server/jsons";
+import { gameIdSchema } from "~/server/schemas";
+import { publicProcedure } from "~/server/trpc";
 
 export const procedure = publicProcedure
   .input(
@@ -11,18 +12,23 @@ export const procedure = publicProcedure
     }),
   )
   .query(async ({ input: { gameId } }) => {
-    const scores = await prisma.score.findMany({
-      select: {
-        playerName: true,
-        values: true,
-        createdAt: true,
-        updatedAt: true,
-        moderatorKey: true,
-        gameId: true,
-      },
-      where: {
-        gameId,
-      },
-    });
-    return scores;
+    const db = getDatabase();
+    const scores = await db
+      .selectFrom("scores")
+      .where("gameId", "=", gameId)
+      .innerJoin("moderators", (qb) =>
+        qb.onRef("moderators.id", "=", "scores.moderatorId"),
+      )
+      .select([
+        "scores.playerName",
+        "scores.values",
+        "scores.createdAt",
+        "scores.updatedAt",
+        "moderators.name as moderatorName",
+      ])
+      .execute();
+    return scores.map((score) => ({
+      ...score,
+      values: getScores(score.values).values,
+    }));
   });

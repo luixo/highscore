@@ -1,8 +1,15 @@
-import { adminProcedure } from '~/server/trpc';
-import { prisma } from '~/server/prisma';
+import { v4 } from "uuid";
 
-import { addGameSchema } from '~/server/schemas';
-import { pushEvent } from '~/server/pusher';
+import { getDatabase } from "~/server/database/database";
+import {
+  getAggregation,
+  getFormatting,
+  getInputs,
+  getSort,
+} from "~/server/jsons";
+import { addGameSchema } from "~/server/schemas";
+import { pushEvent } from "~/server/subscription";
+import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(addGameSchema)
@@ -10,8 +17,12 @@ export const procedure = adminProcedure
     async ({
       input: { eventId, title, logoUrl, inputs, aggregation, formatting, sort },
     }) => {
-      const game = await prisma.game.create({
-        data: {
+      const db = getDatabase();
+      const id = v4();
+      const gameRaw = await db
+        .insertInto("games")
+        .values({
+          id,
           eventId,
           title,
           logoUrl,
@@ -19,21 +30,28 @@ export const procedure = adminProcedure
           aggregation,
           formatting,
           sort,
-        },
-        select: {
-          eventId: true,
-          id: true,
-          title: true,
-          logoUrl: true,
-          inputs: true,
-          aggregation: true,
-          formatting: true,
-          sort: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
-      await pushEvent('game:added', { game });
+        })
+        .returning([
+          "eventId",
+          "id",
+          "title",
+          "logoUrl",
+          "inputs",
+          "aggregation",
+          "formatting",
+          "sort",
+          "createdAt",
+          "updatedAt",
+        ])
+        .executeTakeFirstOrThrow();
+      const game = {
+        ...gameRaw,
+        sort: getSort(gameRaw.sort),
+        inputs: getInputs(gameRaw.inputs),
+        formatting: getFormatting(gameRaw.formatting),
+        aggregation: getAggregation(gameRaw.aggregation),
+      };
+      await pushEvent("game:added", { game });
       return game;
     },
   );

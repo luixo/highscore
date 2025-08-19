@@ -1,9 +1,10 @@
-import { protectedProcedure } from '~/server/trpc';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import { gameIdSchema, playerNameSchema } from '~/server/schemas';
-import { pushEvent } from '~/server/pusher';
-import { TRPCError } from '@trpc/server';
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import { gameIdSchema, playerNameSchema } from "~/server/schemas";
+import { pushEvent } from "~/server/subscription";
+import { protectedProcedure } from "~/server/trpc";
 
 export const procedure = protectedProcedure
   .input(
@@ -13,30 +14,29 @@ export const procedure = protectedProcedure
     }),
   )
   .mutation(async ({ input: { gameId, playerName } }) => {
-    const matchedPlayer = await prisma.score.findFirst({
-      where: {
-        gameId,
-        playerName: {
-          equals: playerName,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        playerName: true,
-      },
-    });
+    const db = getDatabase();
+
+    const matchedPlayer = await db
+      .selectFrom("scores")
+      .where(({ and }) => and({ gameId, playerName }))
+      .select("playerName")
+      .executeTakeFirst();
     if (!matchedPlayer) {
       throw new TRPCError({
-        code: 'NOT_FOUND',
+        code: "NOT_FOUND",
         message: `Player with name "${playerName}" not found`,
       });
     }
-    await prisma.score.delete({
-      where: {
-        gamePlayerIdentifier: { gameId, playerName: matchedPlayer.playerName },
-      },
-    });
-    await pushEvent('score:removed', {
+    await db
+      .deleteFrom("scores")
+      .where(({ and }) =>
+        and({
+          gameId,
+          playerName: matchedPlayer.playerName,
+        }),
+      )
+      .executeTakeFirst();
+    await pushEvent("score:removed", {
       gameId,
       playerName: matchedPlayer.playerName,
     });

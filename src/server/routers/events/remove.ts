@@ -1,7 +1,8 @@
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
-import { eventIdSchema } from '~/server/schemas';
-import { adminProcedure } from '~/server/trpc';
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import { eventIdSchema } from "~/server/schemas";
+import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(
@@ -10,5 +11,6 @@ export const procedure = adminProcedure
     }),
   )
   .mutation(async ({ input: { eventId } }) => {
-    await prisma.event.delete({ where: { id: eventId } });
+    const db = getDatabase();
+    await db.deleteFrom("events").where("id", "=", eventId).executeTakeFirst();
   });

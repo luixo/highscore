@@ -1,12 +1,12 @@
-import { adminProcedure } from '~/server/trpc';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
+import { z } from "zod";
 
+import { getDatabase } from "~/server/database/database";
 import {
   eventIdSchema,
   moderatorKeySchema,
   moderatorNameSchema,
-} from '~/server/schemas';
+} from "~/server/schemas";
+import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(
@@ -17,26 +17,16 @@ export const procedure = adminProcedure
     }),
   )
   .mutation(async ({ input: { eventId, key, name } }) => {
-    const result = await prisma.moderator.upsert({
-      where: {
-        eventId,
-        key: key.toLowerCase(),
-      },
-      create: {
+    const db = getDatabase();
+    const result = await db
+      .insertInto("moderators")
+      .values({
         eventId,
         key: key.toLowerCase(),
         name,
-        role: 'Moderator',
-      },
-      update: {
-        name: name + '1',
-      },
-    });
-    console.log('res', {
-      eventId,
-      key: key.toLowerCase(),
-      name,
-      role: 'Moderator',
-    });
+        role: "moderator",
+      })
+      .returning(["name", "key"])
+      .executeTakeFirstOrThrow();
     return result;
   });

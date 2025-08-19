@@ -1,16 +1,14 @@
-import { useLocalStorageValue } from '@react-hookz/web';
-import { useCallback } from 'react';
+import { useCallback } from "react";
+
+import { useLocalStorage } from "usehooks-ts";
 
 export const useVisitedEvents = () => {
-  const { value, set: setEvents } = useLocalStorageValue<
+  const [events, setEvents] = useLocalStorage<
     {
       eventId: string;
       lastVisited: number;
     }[]
-  >('visitedEvents', {
-    initializeWithValue: false,
-  });
-  const events = value ?? [];
+  >("visitedEvents", []);
   return {
     events,
     removeEvent: useCallback(

@@ -1,7 +1,14 @@
-import { publicProcedure } from '~/server/trpc';
-import { prisma } from '~/server/prisma';
-import { z } from 'zod';
-import { eventIdSchema } from '~/server/schemas';
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import {
+  getAggregation,
+  getFormatting,
+  getInputs,
+  getSort,
+} from "~/server/jsons";
+import { eventIdSchema } from "~/server/schemas";
+import { publicProcedure } from "~/server/trpc";
 
 export const procedure = publicProcedure
   .input(
@@ -10,25 +17,29 @@ export const procedure = publicProcedure
     }),
   )
   .query(async ({ input: { eventId } }) => {
-    const games = await prisma.game.findMany({
-      select: {
-        id: true,
-        title: true,
-        logoUrl: true,
-        inputs: true,
-        formatting: true,
-        aggregation: true,
-        sort: true,
-        createdAt: true,
-        updatedAt: true,
-        eventId: true,
-      },
-      where: {
-        eventId,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
-    return games;
+    const db = getDatabase();
+    const games = await db
+      .selectFrom("games")
+      .where("eventId", "=", eventId)
+      .orderBy("createdAt", "asc")
+      .select([
+        "id",
+        "title",
+        "logoUrl",
+        "inputs",
+        "formatting",
+        "aggregation",
+        "sort",
+        "createdAt",
+        "updatedAt",
+        "eventId",
+      ])
+      .execute();
+    return games.map((game) => ({
+      ...game,
+      sort: getSort(game.sort),
+      inputs: getInputs(game.inputs),
+      formatting: getFormatting(game.formatting),
+      aggregation: getAggregation(game.aggregation),
+    }));
   });

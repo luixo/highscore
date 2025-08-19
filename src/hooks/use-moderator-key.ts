@@ -1,6 +1,7 @@
-import { useCallback, useContext } from 'react';
-import { ModeratorContext } from '~/components/moderator-context';
-import type { EventId } from '~/server/schemas';
+import { useCallback, useContext } from "react";
+
+import { ModeratorContext } from "~/contexts/moderator-context";
+import type { EventId } from "~/server/schemas";
 
 export const useModeratorKey = (eventId: EventId) => {
   const [keys, setKeys] = useContext(ModeratorContext);
@@ -15,6 +16,7 @@ export const useModeratorKey = (eventId: EventId) => {
     removeModeratorKey: useCallback(() => {
       setKeys((prevRecord) => {
         const nextRecord = { ...prevRecord };
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete nextRecord[eventId];
         return nextRecord;
       });

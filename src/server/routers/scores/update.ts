@@ -1,12 +1,14 @@
-import { adminProcedure } from '~/server/trpc';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import { getScores } from "~/server/jsons";
 import {
   gameIdSchema,
   playerNameSchema,
   scoreUpdateObject,
-} from '~/server/schemas';
-import { pushEvent } from '~/server/pusher';
+} from "~/server/schemas";
+import { pushEvent } from "~/server/subscription";
+import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(
@@ -16,24 +18,40 @@ export const procedure = adminProcedure
       updateObject: scoreUpdateObject,
     }),
   )
-  .mutation(async ({ input: { gameId, playerName, updateObject } }) => {
-    const score = await prisma.score.update({
-      where: {
-        gamePlayerIdentifier: {
+  .mutation(async ({ ctx, input: { gameId, playerName, updateObject } }) => {
+    const db = getDatabase();
+    const score = await db
+      .updateTable("scores")
+      .where(({ and }) =>
+        and({
           gameId,
           playerName,
-        },
-      },
-      data:
-        updateObject.type === 'playerName'
+        }),
+      )
+      .set(
+        updateObject.type === "playerName"
           ? {
               playerName: updateObject.playerName,
             }
-          : updateObject.type === 'scores'
+          : updateObject.type === "scores"
             ? {
-                values: updateObject.scores,
+                values: {
+                  values: updateObject.scores,
+                },
               }
             : {},
+      )
+      .returning(["scores.updatedAt", "scores.values", "scores.createdAt"])
+      .executeTakeFirstOrThrow();
+    const nextScore = {
+      ...score,
+      values: getScores(score.values).values,
+      moderatorName: ctx.session.name,
+    };
+    await pushEvent("score:upsert", {
+      gameId,
+      playerName,
+      score: nextScore,
     });
-    await pushEvent('score:upsert', { gameId, playerName, score });
+    return nextScore;
   });

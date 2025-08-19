@@ -1,13 +1,13 @@
-import { useLocalStorageValue } from '@react-hookz/web';
-import { useCallback } from 'react';
-import type { EventId } from '~/server/schemas';
-import type { GameId } from '~/server/schemas';
+import { useCallback } from "react";
+
+import { useLocalStorage } from "usehooks-ts";
+
+import type { EventId, GameId } from "~/server/schemas";
 
 export const useLastGame = (eventId: EventId) => {
-  const { value, set: setGamesRecord } = useLocalStorageValue<
+  const [gamesRecord, setGamesRecord] = useLocalStorage<
     Record<EventId, GameId>
-  >('selectedGameIds', { initializeWithValue: false });
-  const gamesRecord = value ?? {};
+  >("selectedGameIds", {});
   return {
     gameId: gamesRecord[eventId],
     setGameId: useCallback(
@@ -19,6 +19,7 @@ export const useLastGame = (eventId: EventId) => {
     removeGameId: useCallback(() => {
       setGamesRecord((prevRecord) => {
         const nextRecord = { ...prevRecord };
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete nextRecord[eventId];
         return nextRecord;
       });

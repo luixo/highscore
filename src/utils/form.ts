@@ -1,14 +1,32 @@
-import type { FieldErrors } from 'react-hook-form';
+import {
+  type StandardSchemaV1Issue,
+  createFormHookContexts,
+} from "@tanstack/react-form";
+import { isNonNullish } from "remeda";
 
-export const collectErrors = (errors: FieldErrors<any>): string[] => {
-  return Object.values(errors).reduce<string[]>((acc, value) => {
-    if (value && 'message' in value && value.message) {
-      // eslint-disable-next-line @typescript-eslint/no-base-to-string
-      return [...acc, value.message.toString()];
-    }
-    if (typeof value === 'object') {
-      return [...acc, ...collectErrors(value as FieldErrors)];
-    }
-    return acc;
-  }, []);
+import type { AppFormApi } from "~/hooks/use-app-form";
+
+export type FieldError =
+  | (StandardSchemaV1Issue | undefined)
+  | (StandardSchemaV1Issue | undefined)[];
+
+export const getErrorState = ({ fieldError }: { fieldError?: FieldError }) => {
+  const fieldErrorMessages = (
+    Array.isArray(fieldError) ? fieldError : [fieldError].filter(Boolean)
+  )
+    .filter(isNonNullish)
+    .map(({ message }) => message)
+    .filter(isNonNullish);
+  return {
+    isWarning: fieldErrorMessages.length !== 0,
+    errors: fieldErrorMessages,
+  };
 };
+
+export const getAllErrors = <F>(formApi: AppFormApi<F>) =>
+  getErrorState({
+    fieldError: formApi.getAllErrors().form.errors,
+  }).errors.join("\n");
+
+export const { useFormContext, fieldContext, formContext } =
+  createFormHookContexts();

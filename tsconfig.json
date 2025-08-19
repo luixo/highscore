@@ -1,36 +1,35 @@
 {
   "compilerOptions": {
+    "target": "ES2023",
+    "useDefineForClassFields": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
     "skipLibCheck": true,
-    "target": "es2022",
-    "allowJs": true,
+    "allowJs": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "moduleDetection": "force",
-    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
 
     "strict": true,
-    "checkJs": true,
-    "allowImportingTsExtensions": true,
-
-    "lib": ["dom", "dom.iterable", "ES2022", "ESNext"],
-    "noEmit": true,
-    "module": "Preserve",
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "plugins": [{ "name": "next" }],
-    "incremental": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "useUnknownInCatchVariables": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
 
     "baseUrl": ".",
     "paths": {
       "~/*": ["src/*"]
-    },
-
-    "types": ["vitest/globals"]
+    }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "*.js",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["**/*"]
 }

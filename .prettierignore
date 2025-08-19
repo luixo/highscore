@@ -1,0 +1,6 @@
+.history
+.yarn
+.tanstack
+.output
+**/public
+*.gen.ts

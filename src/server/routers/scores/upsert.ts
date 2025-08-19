@@ -1,10 +1,12 @@
-import { protectedProcedure } from '~/server/trpc';
-import { z } from 'zod';
-import { prisma } from '~/server/prisma';
+import { z } from "zod";
 
-import { gameIdSchema, playerNameSchema, scoresSchema } from '~/server/schemas';
-import { pushEvent } from '~/server/pusher';
-import { getScores } from '~/utils/jsons';
+import { getDatabase } from "~/server/database/database";
+import type { Json } from "~/server/database/database.gen";
+import { getScores } from "~/server/jsons";
+import { gameIdSchema, playerNameSchema, scoresSchema } from "~/server/schemas";
+import { pushEvent } from "~/server/subscription";
+import { protectedProcedure } from "~/server/trpc";
+import type { ScoreType } from "~/utils/types";
 
 export const procedure = protectedProcedure
   .input(
@@ -14,55 +16,77 @@ export const procedure = protectedProcedure
       scores: scoresSchema,
     }),
   )
-  .mutation(async ({ input: { gameId, playerName, scores: values }, ctx }) => {
-    const matchedScore = await prisma.score.findFirst({
-      where: {
-        gameId,
-        playerName: {
-          equals: playerName,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        playerName: true,
-        values: true,
-        game: true,
-      },
-    });
+  .mutation(async ({ input: { gameId, playerName, scores }, ctx }) => {
+    const db = getDatabase();
+    const matchedScore = await db
+      .selectFrom("scores")
+      .where(({ and }) => and({ gameId, playerName }))
+      .select(["playerName", "values"])
+      .executeTakeFirst();
     const playerNameInsensitive = matchedScore
       ? matchedScore.playerName
       : playerName;
-    const result = await prisma.score.upsert({
-      where: {
-        gamePlayerIdentifier: {
+    let result: Omit<ScoreType, "playerName" | "moderatorName" | "values"> & {
+      values: Json;
+      moderatorId: string;
+    };
+    if (matchedScore) {
+      result = await db
+        .updateTable("scores")
+        .where(({ and }) =>
+          and({
+            gameId,
+            playerName: playerNameInsensitive,
+          }),
+        )
+        .set({
+          values: {
+            ...scores,
+            values: scores.values.map((scoreValue) => {
+              const matchedValue = getScores(matchedScore?.values)?.values.find(
+                (score) => score.key === scoreValue.key,
+              );
+              if (scoreValue.type === "counter") {
+                if (!matchedValue) {
+                  return scoreValue;
+                }
+                return {
+                  ...scoreValue,
+                  value: matchedValue.value + scoreValue.value,
+                };
+              }
+              return scoreValue;
+            }),
+          },
+        })
+        .returning(["createdAt", "updatedAt", "values", "moderatorId"])
+        .executeTakeFirstOrThrow();
+    } else {
+      result = await db
+        .insertInto("scores")
+        .values({
           gameId,
           playerName: playerNameInsensitive,
-        },
-      },
-      create: {
-        gameId,
-        playerName: playerNameInsensitive,
-        values,
-        moderatorKey: ctx.session.key,
-      },
-      update: {
-        values: values.map((scoreValue) => {
-          const matchedValue = getScores(matchedScore?.values)?.find(
-            (score) => score.key === scoreValue.key,
-          );
-          if (scoreValue.type === 'counter') {
-            if (!matchedValue) {
-              return scoreValue;
-            }
-            return {
-              ...scoreValue,
-              value: matchedValue.value + scoreValue.value,
-            };
-          }
-          return scoreValue;
-        }),
+          values: scores,
+          moderatorId: ctx.session.id,
+        })
+        .returning(["createdAt", "updatedAt", "values", "moderatorId"])
+        .executeTakeFirstOrThrow();
+    }
+    const moderator = await db
+      .selectFrom("moderators")
+      .where("moderators.id", "=", result.moderatorId)
+      .select("name")
+      .executeTakeFirstOrThrow();
+
+    await pushEvent("score:upsert", {
+      gameId,
+      playerName,
+      score: {
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        values: getScores(result.values).values,
+        moderatorName: moderator.name,
       },
     });
-
-    await pushEvent('score:upsert', { gameId, playerName, score: result });
   });
