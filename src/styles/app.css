@@ -8,6 +8,15 @@
 
 @theme {
   --font-inter: "Inter", sans-serif;
+
+  @keyframes fadeBackground {
+    0% {
+      background-color: oklch(0.7329 0.1935 150.81 / var(--bg-start));
+    }
+    100% {
+      background-color: oklch(0.7329 0.1935 150.81 / 0);
+    }
+  }
 }
 body {
   @apply font-inter bg-background text-foreground;

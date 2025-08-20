@@ -22,7 +22,6 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { CiMedal } from "react-icons/ci";
-import { useInterval } from "usehooks-ts";
 import type { z } from "zod";
 
 import { RemoveButton } from "~/components/remove-button";
@@ -248,22 +247,9 @@ const RecordInfoModal: React.FC<{
   </Modal>
 );
 
-const getColor = (delta: number) => {
-  if (delta < 15 * 1000) {
-    return "bg-success-400/100";
-  } else if (delta < 45 * 1000) {
-    return "bg-success-400/80";
-  } else if (delta < 75 * 1000) {
-    return "bg-success-400/60";
-  } else if (delta < 120 * 1000) {
-    return "bg-success-400/40";
-  } else if (delta < 200 * 1000) {
-    return "bg-success-400/20";
-  } else if (delta < 300 * 1000) {
-    return "bg-success-400/10";
-  }
-  return;
-};
+const FADE_LENGTH = 300 * 1000;
+const getFadeStart = (delta: number) =>
+  1 - Math.min(delta, FADE_LENGTH) / FADE_LENGTH;
 
 const ScoreBoard: React.FC<{
   rawData: ScoreType[];
@@ -300,10 +286,6 @@ const ScoreBoard: React.FC<{
       { ...lastElement, players: [...lastElement.players, element] },
     ];
   }, []);
-  const [now, setNow] = React.useState(Date.now());
-  useInterval(() => {
-    setNow(Date.now());
-  }, 1000);
 
   const moderatorStatus = useModeratorStatus({ eventId: game.eventId });
   const removeScoreMutation = useMutation(
@@ -461,9 +443,17 @@ const ScoreBoard: React.FC<{
             return (
               <TableRow
                 key={item.score}
-                className={["transition-colors", getColor(now - maxUpdatedAt)]
+                className={[
+                  "transition-colors",
+                  "animate-[fadeBackground_120s_linear_forwards]",
+                ]
                   .filter(Boolean)
                   .join(" ")}
+                style={{
+                  "--bg-start": getFadeStart(
+                    Date.now() - maxUpdatedAt,
+                  ).toString(),
+                }}
               >
                 {(columnKey) => (
                   <TableCell className="px-2 first:rounded-l-lg last:rounded-r-lg">
