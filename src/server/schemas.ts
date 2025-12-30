@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const gameTitleSchema = z.string().min(1).max(64);
 
-export const precisionSchema = z.number().int().min(1).max(10);
+export const precisionSchema = z.number().int().min(0).max(10);
 
 export const formattingSchema = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("time"), precision: precisionSchema }),
