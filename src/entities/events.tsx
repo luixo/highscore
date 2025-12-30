@@ -17,7 +17,7 @@ export const Events: React.FC = () => {
   }
   return (
     <div className="flex flex-col gap-4">
-      {events.map((event) => (
+      {events.toSorted((eventA, eventB) => eventB.lastVisited - eventA.lastVisited).map((event) => (
         <Event key={event.eventId} id={event.eventId} />
       ))}
     </div>
