@@ -136,7 +136,7 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
       <div className="flex flex-wrap gap-2">
         {mockedInputs.map((input) => (
           <Code key={input.key}>
-            {input.key}: {input.value.toPrecision(precision)}
+            {input.key}: {input.value.toFixed(precision)}
           </Code>
         ))}
       </div>
