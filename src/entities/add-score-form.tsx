@@ -85,11 +85,16 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
       onChange: formSchema,
     },
     onSubmit: ({ value }) => {
-      addScoreMutation.mutate({
-        playerName: value.playerName,
-        scores: value.scores,
-        gameId: game.id,
-      });
+      const playerNames = value.playerName
+        .split(",")
+        .map((name) => name.trim());
+      playerNames.forEach((playerName) =>
+        addScoreMutation.mutate({
+          playerName: playerName,
+          scores: value.scores,
+          gameId: game.id,
+        }),
+      );
     },
     onSubmitInvalid: ({ formApi }) => {
       addToast({
