@@ -47,7 +47,7 @@ export const Game: React.FC<{
       <CardHeader className="bg-secondary/50 text-foreground relative flex h-[50px] justify-between gap-2 overflow-hidden">
         {game.logoUrl ? (
           <img
-            className={`absolute inset-0 -z-20 w-full ${imageStatus === "error" ? "hidden" : ""}`}
+            className={`absolute inset-0 -z-20 size-full object-cover ${imageStatus === "error" ? "hidden" : ""}`}
             src={game.logoUrl}
             alt={game.title}
             onError={() => setImageStatus("error")}
