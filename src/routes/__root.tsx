@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   errorComponent: DefaultCatchBoundary,
   notFoundComponent: () => <NotFound />,
   shellComponent: ({ children }) => (
-    <html lang="en" className="dark">
+    <html lang="ru" className="dark">
       <head>
         <HeadContent />
       </head>

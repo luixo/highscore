@@ -339,9 +339,9 @@ const ScoreBoard: React.FC<{
         }
         case "names":
           return (
-            <div className="flex flex-col">
-              {packedScore.players.map((player, index, players) => (
-                <span key={player.playerName} className="inline-flex gap-1">
+            <div className="flex flex-wrap">
+              {packedScore.players.map((player) => (
+                <span key={player.playerName} className="inline-flex after:content-[',_'] last:after:content-[''] whitespace-pre-wrap">
                   <div
                     onClick={() => {
                       if (moderatorStatus !== "admin") {
@@ -365,7 +365,6 @@ const ScoreBoard: React.FC<{
                       }
                     />
                   ) : null}
-                  {index === players.length - 1 ? "" : ","}
                 </span>
               ))}
             </div>
@@ -425,7 +424,7 @@ const ScoreBoard: React.FC<{
         isCompact
         aria-label="Таблица результатов"
         classNames={{
-          tr: "border-b last:border-none",
+          tr: "border-b last:border-none border-foreground/30",
         }}
       >
         <TableHeader columns={moderatorStatus ? moderatorColumns : columns}>

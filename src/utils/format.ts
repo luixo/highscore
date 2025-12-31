@@ -4,6 +4,8 @@ import type { formattingSchema } from "~/server/schemas";
 
 export const DEFAULT_PRECISION = 6;
 
+const LOCALE = 'ru';
+
 const pluralize = (
   value: number,
   plurals: Record<"one" | "some" | "many", string>,
@@ -24,7 +26,7 @@ const pluralize = (
 const durationFormat =
   "DurationFormat" in Intl
     ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      new (Intl as any).DurationFormat("en", { style: "short" })
+      new (Intl as any).DurationFormat(LOCALE, { style: "narrow" })
     : undefined;
 
 export const formatScore = (
@@ -35,9 +37,9 @@ export const formatScore = (
     case "time":
       return durationFormat
         ? durationFormat.format({ seconds: Math.floor(score) })
-        : `${Math.floor(score)}s`;
+        : `${Math.floor(score)} с`;
     case "regex": {
-      const numberFormat = new Intl.NumberFormat("en", {
+      const numberFormat = new Intl.NumberFormat(LOCALE, {
         maximumFractionDigits: formatting.precision ?? DEFAULT_PRECISION,
       });
       return formatting.regex

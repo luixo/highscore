@@ -44,7 +44,7 @@ export const Game: React.FC<{
   const [imageStatus, setImageStatus] = React.useState("idle");
   return (
     <Card className="min-h-[250px] w-[320px] lg:w-[240px]">
-      <CardHeader className="bg-secondary/50 text-foreground relative flex h-[50px] justify-between gap-2 overflow-hidden">
+      <CardHeader className="bg-secondary/50 text-foreground relative aspect-[32/5] w-full flex justify-between gap-2 overflow-hidden">
         {game.logoUrl ? (
           <img
             className={`absolute inset-0 -z-20 size-full object-cover ${imageStatus === "error" ? "hidden" : ""}`}
