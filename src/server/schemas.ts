@@ -36,7 +36,7 @@ export const gameUpdateObject = z.discriminatedUnion("type", [
   }),
 ]);
 
-export const moderatorKeys = z.preprocess(
+export const moderatorKeysSchema = z.preprocess(
   (input) => {
     try {
       if (typeof input !== "string") {

@@ -12,7 +12,7 @@ const getBaseUrl = () => {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
-  return `http://127.0.0.1:${process.env.PORT ?? 3000}`;
+  return `http://localhost:${process.env.PORT ?? 3000}`;
 };
 
 export const links = [

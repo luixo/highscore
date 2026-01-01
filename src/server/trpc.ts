@@ -4,7 +4,7 @@ import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { MODERATOR_COOKIE_KEYS } from "~/contexts/moderator-context";
 import { getCookie } from "~/server/cookie";
 import { getDatabase } from "~/server/database/database";
-import { moderatorKeys } from "~/server/schemas";
+import { moderatorKeysSchema } from "~/server/schemas";
 import { transformer } from "~/utils/transformer";
 
 const t = initTRPC.context<FetchCreateContextFnOptions>().create({
@@ -61,7 +61,8 @@ export const protectedProcedure = publicProcedure.use(
       ctx.req.headers.get("cookie") || "",
       MODERATOR_COOKIE_KEYS,
     );
-    const keysParsedResults = moderatorKeys.safeParse(moderatorKeysCookie);
+    const keysParsedResults =
+      moderatorKeysSchema.safeParse(moderatorKeysCookie);
     if (!keysParsedResults.success) {
       throw new TRPCError({
         code: "UNAUTHORIZED",

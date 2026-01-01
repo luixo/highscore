@@ -341,7 +341,10 @@ const ScoreBoard: React.FC<{
           return (
             <div className="flex flex-wrap">
               {packedScore.players.map((player) => (
-                <span key={player.playerName} className="inline-flex after:content-[',_'] last:after:content-[''] whitespace-pre-wrap">
+                <span
+                  key={player.playerName}
+                  className="inline-flex whitespace-pre-wrap after:content-[',_'] last:after:content-['']"
+                >
                   <div
                     onClick={() => {
                       if (moderatorStatus !== "admin") {
@@ -450,6 +453,8 @@ const ScoreBoard: React.FC<{
                   .join(" ")}
                 style={{
                   "--bg-start": getFadeStart(
+                    // TODO: Fix it
+                    // eslint-disable-next-line react-hooks/purity
                     Date.now() - maxUpdatedAt,
                   ).toString(),
                 }}

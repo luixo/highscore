@@ -42,7 +42,6 @@ const overridenRules = {
     ],
     "@typescript-eslint/consistent-type-definitions": ["error", "type"],
     "@typescript-eslint/consistent-type-imports": "error",
-    "react-hooks/react-compiler": "error",
   },
 } satisfies Linter.Config;
 
@@ -82,7 +81,7 @@ export default ts.config(
   importPlugin.flatConfigs.react,
   importPlugin.flatConfigs["react-native"],
   importPlugin.flatConfigs["stage-0"],
-  reactHooksConfigs["recommended-latest"],
+  reactHooksConfigs.flat["recommended-latest"],
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   reactPlugin.configs.flat.recommended!,
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -103,6 +102,6 @@ export default ts.config(
   },
   {
     // see https://eslint.org/docs/latest/use/configure/configuration-files#globally-ignoring-files-with-ignores
-    ignores: [".history/", "dist/", ".nitro/"],
+    ignores: [".history/", ".output/", '**/*.gen.ts'],
   },
 );

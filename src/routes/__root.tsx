@@ -11,17 +11,14 @@ import {
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { createTRPCClient } from "@trpc/client";
-import { parse } from "cookie";
 
-import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import { Devtools } from "~/components/devtools";
-import { NotFound } from "~/components/not-found";
 import {
   MODERATOR_COOKIE_KEYS,
   ModeratorProvider,
 } from "~/contexts/moderator-context";
 import type { AppRouter } from "~/server/routers/_app";
-import { moderatorKeys } from "~/server/schemas";
+import { moderatorKeysSchema } from "~/server/schemas";
 import appCss from "~/styles/app.css?url";
 import { queryClientConfig } from "~/utils/query";
 import { TRPCProvider, links } from "~/utils/trpc";
@@ -55,7 +52,8 @@ const RootComponent = () => {
 };
 
 type RouterContext = {
-  request: Request | null;
+  cookies: Record<string, string | undefined>;
+  queryClient: QueryClient;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -87,22 +85,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "icon", href: "/favicon.ico" },
     ],
   }),
+  ssr: false,
   component: RootComponent,
-  loader: async (ctx) => {
-    const request = ctx.context.request;
-    const cookies = parse(
-      request ? request.headers.get("cookie") || "" : document.cookie,
-    );
-    const parsedKeys = moderatorKeys.safeParse(
-      cookies[MODERATOR_COOKIE_KEYS]
-        ? decodeURIComponent(cookies[MODERATOR_COOKIE_KEYS])
+  loader: async ({ context }) => {
+    const moderatorKeysParseResult = moderatorKeysSchema.safeParse(
+      context.cookies[MODERATOR_COOKIE_KEYS]
+        ? decodeURIComponent(context.cookies[MODERATOR_COOKIE_KEYS])
         : undefined,
     );
-    return { moderatorKeys: parsedKeys.success ? parsedKeys.data : {} };
+    return {
+      moderatorKeys: moderatorKeysParseResult.success
+        ? moderatorKeysParseResult.data
+        : {},
+    };
   },
-  staleTime: Infinity,
-  errorComponent: DefaultCatchBoundary,
-  notFoundComponent: () => <NotFound />,
   shellComponent: ({ children }) => (
     <html lang="ru" className="dark">
       <head>

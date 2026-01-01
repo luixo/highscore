@@ -4,7 +4,7 @@ import type { formattingSchema } from "~/server/schemas";
 
 export const DEFAULT_PRECISION = 6;
 
-const LOCALE = 'ru';
+const LOCALE = "ru";
 
 const pluralize = (
   value: number,

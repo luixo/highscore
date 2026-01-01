@@ -1,23 +1,9 @@
-import type {
-  ServerFileRoutesByPath,
-  ServerRouteMethodRecordValue,
-} from "@tanstack/react-start/server";
-import { createServerFileRoute } from "@tanstack/react-start/server";
+import { createFileRoute } from "@tanstack/react-router";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter } from "~/server/routers/_app";
 
-type Callback = Extract<
-  ServerRouteMethodRecordValue<
-    ServerFileRoutesByPath["/api/trpc/$"]["parentRoute"],
-    "/api/trpc/$",
-    undefined
-  >,
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  Function
->;
-
-const callback: Callback = async ({ request }) =>
+const callback = async (request: Request) =>
   fetchRequestHandler({
     endpoint: "/api/trpc",
     req: request,
@@ -41,7 +27,11 @@ const callback: Callback = async ({ request }) =>
     },
   });
 
-export const ServerRoute = createServerFileRoute("/api/trpc/$").methods({
-  GET: callback,
-  POST: callback,
+export const Route = createFileRoute("/api/trpc/$")({
+  server: {
+    handlers: {
+      GET: ({ request }) => callback(request),
+      POST: ({ request }) => callback(request),
+    },
+  },
 });
