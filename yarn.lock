@@ -8027,6 +8027,7 @@ __metadata:
     superjson: "npm:^2.2.2"
     tailwind-merge: "npm:^3.3.1"
     tailwindcss: "npm:^4.1.11"
+    temporal-polyfill: "npm:^0.3.0"
     typescript: "npm:^5.8.3"
     typescript-eslint: "npm:^8.38.0"
     usehooks-ts: "npm:^3.1.1"
@@ -11215,6 +11216,22 @@ __metadata:
     mkdirp: "npm:^3.0.1"
     yallist: "npm:^5.0.0"
   checksum: 10/12a2a4fc6dee23e07cc47f1aeb3a14a1afd3f16397e1350036a8f4cdfee8dcac7ef5978337a4e7b2ac2c27a9a6d46388fc2088ea7c80cb6878c814b1425f8ecf
+  languageName: node
+  linkType: hard
+
+"temporal-polyfill@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "temporal-polyfill@npm:0.3.0"
+  dependencies:
+    temporal-spec: "npm:0.3.0"
+  checksum: 10/e4f5c0e546bf663720569b8b68fc41aa43ea891a77043a5614f6c1f2109cd01fe60c90b9de2f5d4f92f3155bfbdd17ad3ec7de1e9aaf01fa3cf156f230a0e41a
+  languageName: node
+  linkType: hard
+
+"temporal-spec@npm:0.3.0":
+  version: 0.3.0
+  resolution: "temporal-spec@npm:0.3.0"
+  checksum: 10/5863e3e3f364a5cf64bf999c85bf19b08924a91ee8d618489d9bf6cfff2452e4f916080c8ede93fc91de609200fc20002928e0146c7fc15375b123b20234799b
   languageName: node
   linkType: hard
 

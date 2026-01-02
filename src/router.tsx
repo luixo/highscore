@@ -2,6 +2,8 @@ import { Spinner } from "@heroui/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 
+import "temporal-polyfill/global";
+
 import { DefaultCatchBoundary } from "~/components/default-catch-boundary";
 import { NotFound } from "~/components/not-found";
 import type { RouterContext } from "~/routes/__root";
