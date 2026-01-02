@@ -7,13 +7,14 @@ import { CiHome } from "react-icons/ci";
 
 import { AllTabs } from "~/entities/all-tabs";
 import { EventTitle } from "~/entities/event-title";
-import { LoginModal } from "~/entities/login-modal";
-import { ModeSwitch } from "~/entities/mode-switch";
+import { SettingsButton } from "~/entities/settings-button";
 import { useSubscription } from "~/hooks/use-subscription";
 import { useVisitedEvents } from "~/hooks/use-visited-events";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 export const Page: React.FC<{ id: string }> = ({ id: eventId }) => {
+  const { t } = useTranslation();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { upsertEvent } = useVisitedEvents();
@@ -78,14 +79,13 @@ export const Page: React.FC<{ id: string }> = ({ id: eventId }) => {
               <CiHome size={20} />
             </Button>
             <h1 className="text-[clamp(1rem,10vw,2rem)] leading-tight font-semibold tracking-tight sm:text-[clamp(1rem,10vw,3rem)] lg:text-5xl">
-              Список рекордов
+              {t("common.title")}
             </h1>
           </div>
           <EventTitle eventId={eventId} />
         </div>
-        <div className="flex gap-3">
-          <ModeSwitch />
-          <LoginModal eventId={eventId} />
+        <div className="flex items-center gap-3">
+          <SettingsButton eventId={eventId} />
         </div>
       </div>
       <div>

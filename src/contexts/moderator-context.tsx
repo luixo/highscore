@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { serialize } from "cookie";
 
 import type { EventId, GameId } from "~/server/schemas";
+import { YEAR } from "~/utils/time";
 import { useTRPC } from "~/utils/trpc";
 
 export const MODERATOR_COOKIE_KEYS = "moderator-keys";
@@ -35,7 +36,7 @@ export const ModeratorProvider: FC<
     } else {
       document.cookie = serialize(MODERATOR_COOKIE_KEYS, JSON.stringify(keys), {
         path: "/",
-        maxAge: 365 * 24 * 60 * 60 * 1000,
+        maxAge: YEAR,
         sameSite: "strict",
       });
     }

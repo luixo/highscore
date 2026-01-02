@@ -1,0 +1,235 @@
+{
+  "common": {
+    "title": "Highscore",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save"
+  },
+  "settings": {
+    "title": "Settings",
+    "langSwitcher": {
+      "title": "Switch language"
+    }
+  },
+  "addScore": {
+    "title": "Add result",
+    "game": {
+      "label": "Game",
+      "placeholder": "Select a game"
+    },
+    "form": {
+      "button": "Add",
+      "player": {
+        "label": "Player name"
+      }
+    },
+    "toast": {
+      "description": "Score \"{{score}}\" for player \"{{player}}\" added"
+    }
+  },
+  "addModerator": {
+    "title": "Add moderator",
+    "form": {
+      "name": {
+        "label": "Name"
+      },
+      "key": {
+        "Label": "Moderator key"
+      },
+      "button": "Add"
+    },
+    "toast": {
+      "description": "Moderator \"{{name}}\" added"
+    }
+  },
+
+  "createEvent": {
+    "title": "New event",
+    "form": {
+      "title": {
+        "label": "Title",
+        "placeholder": "Miraculuos games"
+      },
+      "adminName": {
+        "label": "Admin name",
+        "placeholder": "Johnny"
+      },
+      "adminKey": {
+        "label": "Admin key",
+        "placeholder": "very-secret-value"
+      },
+      "submitButton": "Create"
+    },
+    "toast": {
+      "description": "Event \"{{title}}\" added"
+    }
+  },
+  "login": {
+    "title": "Login",
+    "form": {
+      "key": {
+        "label": "Key"
+      },
+      "button": "Save",
+      "logoutButton": "Logout"
+    },
+    "toast": {
+      "success": {
+        "description": "Authorization successful"
+      },
+      "error": {
+        "description": "Key \"{{key}}\" not found!"
+      }
+    }
+  },
+  "allTabs": {
+    "scores": "Scores",
+    "moderation": "Moderation"
+  },
+  "moderatorTabs": {
+    "record": "Record",
+    "game": "Game",
+    "moderator": "Moderator"
+  },
+  "scoreList": {
+    "noGames": "No games yet"
+  },
+  "scores": {
+    "table": {
+      "title": "Scores table",
+      "emptyContent": "No results yet, play this game!"
+    },
+    "removeScore": {
+      "toast": {
+        "description": "Player \"{{player}}\" record removed"
+      }
+    },
+    "updateScore": {
+      "title": "Change player \"{{player}}\" score",
+      "toast": {
+        "description": "Player \"{{player}}\" record updated: {{score}}"
+      }
+    },
+    "renamePlayer": {
+      "title": "Rename player \"{{player}}\"",
+      "toast": {
+        "description": "Player \"{{name}}\" renamed"
+      }
+    },
+    "record": {
+      "title": "Record info",
+      "columns": {
+        "score": "Score",
+        "playerName": "Player name",
+        "first": "First result",
+        "last": "Last result",
+        "moderator": "Set by"
+      }
+    }
+  },
+  "moderatorsList": {
+    "keyLabel": "Key",
+    "nameLabel": "Name"
+  },
+  "event": {
+    "game": "Game \"{{title}}\"",
+    "notFound": "Event \"{{id}}\" not found"
+  },
+  "game": {
+    "removed": "Game \"{{id}}\" removed"
+  },
+  "events": {
+    "inviteMessage": "Ask someone to invite you to a game!"
+  },
+  "index": {
+    "title": "Games list"
+  },
+  "notFound": {
+    "home": "Home",
+    "message": "You seem to be lost, friend"
+  },
+  "addGame": {
+    "title": "Add game",
+    "form": {
+      "title": {
+        "label": "Game title"
+      },
+      "logoUrl": {
+        "label": "Logo URL"
+      },
+      "formatting": {
+        "title": "Formatting",
+        "label": "Results formatting",
+        "placeholder": "Formatting option",
+        "options": {
+          "time": "As time",
+          "special": "Custom formatting"
+        }
+      },
+      "inputs": {
+        "title": "Inputs",
+        "defaultDescription": "Points",
+        "field": {
+          "title": "Field #{{index}}",
+          "hidden": {
+            "label": "Hidden"
+          },
+          "description": {
+            "label": "Input description",
+            "placeholder": "How many it took"
+          },
+          "key": {
+            "label": "Input key",
+            "placeholder": "default"
+          },
+          "type": {
+            "counter": "Counter increment",
+            "number": "Default value"
+          }
+        }
+      },
+      "regex": {
+        "label": "Regex formatting",
+        "placeholder": "%value% {spoon|spoons}"
+      },
+      "precision": {
+        "label": "precisionLabel",
+        "placeholder": "4"
+      },
+
+      "sorting": {
+        "title": "Sorting",
+        "label": "Sort by",
+        "placeholder": "Choose how to sort results",
+        "options": {
+          "asc": "Less is better",
+          "desc": "More is better"
+        }
+      },
+      "aggregation": {
+        "title": "Aggregation",
+        "options": {
+          "sum": "Sum",
+          "diff": "Difference",
+          "div": "Division",
+          "mul": "Multiply"
+        },
+        "key": {
+          "label": "Value key",
+          "placeholder": "Choose from values"
+        },
+        "defaultValue": {
+          "label": "Default value"
+        },
+        "weight": {
+          "label": "Weight (0 to 1)"
+        }
+      },
+      "resultPreview": "Result:",
+      "submitButton": "Add"
+    },
+    "toast": {
+      "description": "Game \"{{title}}\" added"
+    }
+  }
+}

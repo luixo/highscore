@@ -22,6 +22,7 @@ import {
   moderatorNameSchema,
 } from "~/server/schemas";
 import { getAllErrors } from "~/utils/form";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = z.strictObject({
@@ -32,6 +33,7 @@ const formSchema = z.strictObject({
 
 export const CreateEventModal: React.FC = () => {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const [modalOpen, setModalOpen] = React.useState(false);
   const router = useRouter();
   const getDefaultValues = React.useCallback(
@@ -56,7 +58,7 @@ export const CreateEventModal: React.FC = () => {
     },
     onSubmitInvalid: ({ formApi }) => {
       addToast({
-        title: "Ошибка",
+        title: t("common.error"),
         description: getAllErrors(formApi),
         color: "danger",
       });
@@ -67,8 +69,10 @@ export const CreateEventModal: React.FC = () => {
     trpc.events.add.mutationOptions({
       onSuccess: (result, variables) => {
         addToast({
-          title: "Успех",
-          description: `Событие "${result.title}" добавлено`,
+          title: t("common.success"),
+          description: t("createEvent.form.submitButton", {
+            title: result.title,
+          }),
           color: "success",
         });
         form.reset(getDefaultValues());
@@ -102,14 +106,14 @@ export const CreateEventModal: React.FC = () => {
                 form.handleSubmit();
               }}
             >
-              <ModalHeader>Новое событие</ModalHeader>
+              <ModalHeader>{t("createEvent.title")}</ModalHeader>
               <ModalBody className="w-full">
                 <form.AppField name="title">
                   {(field) => (
                     <field.TextField
-                      label="Название"
+                      label={t("createEvent.form.title.label")}
                       isRequired
-                      placeholder="Супер игры"
+                      placeholder={t("createEvent.form.title.placeholder")}
                       value={field.state.value}
                       onValueChange={field.setValue}
                       name={field.name}
@@ -125,9 +129,9 @@ export const CreateEventModal: React.FC = () => {
                 <form.AppField name="adminName">
                   {(field) => (
                     <field.TextField
-                      label="Имя администратора"
+                      label={t("createEvent.form.adminName.label")}
                       isRequired
-                      placeholder="Василий"
+                      placeholder={t("createEvent.form.adminName.placeholder")}
                       value={field.state.value}
                       onValueChange={field.setValue}
                       name={field.name}
@@ -143,9 +147,9 @@ export const CreateEventModal: React.FC = () => {
                 <form.AppField name="adminKey">
                   {(field) => (
                     <field.TextField
-                      label="Ключ администратора"
+                      label={t("createEvent.form.adminKey.label")}
                       isRequired
-                      placeholder="очень-секретное-значение"
+                      placeholder={t("createEvent.form.adminKey.placeholder")}
                       value={field.state.value}
                       onValueChange={field.setValue}
                       name={field.name}
@@ -160,7 +164,9 @@ export const CreateEventModal: React.FC = () => {
                 </form.AppField>
               </ModalBody>
               <ModalFooter className="w-full">
-                <form.SubmitButton>Создать</form.SubmitButton>
+                <form.SubmitButton>
+                  {t("createEvent.form.submitButton")}
+                </form.SubmitButton>
               </ModalFooter>
             </form.Form>
           </form.AppForm>

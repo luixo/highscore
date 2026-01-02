@@ -6,18 +6,20 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Game } from "~/entities/game";
 import { suspendedFallback } from "~/entities/suspense-wrapper";
 import type { EventId } from "~/server/schemas";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const ScoreListInner = suspendedFallback<{ eventId: EventId }>(
   ({ eventId }) => {
     const trpc = useTRPC();
+    const { t } = useTranslation();
     const { data: games } = useSuspenseQuery(
       trpc.games.list.queryOptions({ eventId }),
     );
     return (
       <>
         {games.length === 0 ? (
-          <h2>Игр пока что нет</h2>
+          <h2>{t("scoreList.noGames")}</h2>
         ) : (
           games.map((game) => <Game key={game.id} game={game} />)
         )}

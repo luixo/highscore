@@ -7,18 +7,20 @@ import { RemoveButton } from "~/components/remove-button";
 import { Scores } from "~/entities/scores";
 import { suspendedFallback } from "~/entities/suspense-wrapper";
 import { useSuspenseModeratorStatus } from "~/hooks/use-moderator-status";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 import type { GameType } from "~/utils/types";
 
 const RemoveGameButton = suspendedFallback<{ eventId: string; gameId: string }>(
   ({ eventId, gameId }) => {
     const trpc = useTRPC();
+    const { t } = useTranslation();
     const removeGameMutation = useMutation(
       trpc.games.remove.mutationOptions({
         onSuccess: (_result, variables) => {
           addToast({
-            title: "Успех",
-            description: `Игра "${variables.id}" удалена.`,
+            title: t("common.success"),
+            description: t("game.removed", { id: variables.id }),
             color: "success",
           });
         },

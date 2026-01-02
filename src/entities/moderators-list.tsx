@@ -7,17 +7,19 @@ import { CiRead, CiUnread } from "react-icons/ci";
 import { Input } from "~/components/input";
 import { suspendedFallback } from "~/entities/suspense-wrapper";
 import type { EventId } from "~/server/schemas";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const ModeratorKey: React.FC<{ moderatorKey: string }> = ({ moderatorKey }) => {
   const [isVisible, setIsVisible] = React.useState(false);
   const toggleVisibility = () => setIsVisible(!isVisible);
+  const { t } = useTranslation();
   return (
     <Input
       value={moderatorKey}
       type={isVisible ? "text" : "password"}
       readOnly
-      label="Ключ"
+      label={t("moderatorsList.keyLabel")}
       endContent={
         isVisible ? (
           <CiUnread
@@ -38,6 +40,7 @@ const ModeratorKey: React.FC<{ moderatorKey: string }> = ({ moderatorKey }) => {
 export const ModeratorsList = suspendedFallback<{ eventId: EventId }>(
   ({ eventId }) => {
     const trpc = useTRPC();
+    const { t } = useTranslation();
     const { data: moderators } = useSuspenseQuery(
       trpc.moderator.list.queryOptions({ eventId }),
     );
@@ -45,7 +48,11 @@ export const ModeratorsList = suspendedFallback<{ eventId: EventId }>(
       <div className="flex flex-col gap-3">
         {moderators.map((moderator) => (
           <Card key={moderator.key} className="flex flex-row gap-2 p-4">
-            <Input label="Имя" readOnly value={moderator.name} />
+            <Input
+              label={t("moderatorsList.nameLabel")}
+              readOnly
+              value={moderator.name}
+            />
             <ModeratorKey moderatorKey={moderator.key} />
           </Card>
         ))}

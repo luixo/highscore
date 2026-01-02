@@ -31,6 +31,7 @@ import { useSubscription } from "~/hooks/use-subscription";
 import type { scoresSchema } from "~/server/schemas";
 import { aggregateScore } from "~/utils/aggregation";
 import { formatScore } from "~/utils/format";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 import type { GameType, ScoreType } from "~/utils/types";
 
@@ -43,6 +44,7 @@ const RenamePlayerModal: React.FC<{
   onClose: () => void;
 }> = ({ gameId, playerName, onClose }) => {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const [localName, setLocalName] = React.useState<string>();
   React.useEffect(() => {
     if (playerName) {
@@ -53,8 +55,10 @@ const RenamePlayerModal: React.FC<{
     trpc.scores.update.mutationOptions({
       onSuccess: (_result, variables) => {
         addToast({
-          title: "Успех",
-          description: `Имя игрока "${variables.playerName}" обновлено: "${variables.playerName}"`,
+          title: t("common.success"),
+          description: t("scores.renamePlayer.toast.description", {
+            name: variables.playerName,
+          }),
           color: "success",
         });
       },
@@ -77,7 +81,9 @@ const RenamePlayerModal: React.FC<{
   return (
     <Modal isOpen={Boolean(playerName)} onOpenChange={onClose}>
       <ModalContent>
-        <ModalHeader>{`Переименовать игрока "${playerName}"`}</ModalHeader>
+        <ModalHeader>
+          {t("scores.renamePlayer.title", { player: playerName })}
+        </ModalHeader>
         <ModalBody className="w-full">
           <Input value={localName} onValueChange={setLocalName} />
           <Button
@@ -85,7 +91,7 @@ const RenamePlayerModal: React.FC<{
             onPress={saveLocalPlayerName}
             isDisabled={!localName}
           >
-            Сохранить
+            {t("common.save")}
           </Button>
         </ModalBody>
       </ModalContent>
@@ -104,6 +110,7 @@ const ChangePlayerScoreModal: React.FC<{
   onClose: () => void;
 }> = ({ game, player, onClose }) => {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const [localScores, setLocalScores] = React.useState<
     z.infer<typeof scoresSchema>["values"]
   >(player?.scores ?? []);
@@ -116,8 +123,11 @@ const ChangePlayerScoreModal: React.FC<{
     trpc.scores.update.mutationOptions({
       onSuccess: (result, variables) => {
         addToast({
-          title: "Успех",
-          description: `Рекорд игрока "${variables.playerName}" обновлен: ${aggregateScore(result.values, game.aggregation)}`,
+          title: t("common.success"),
+          description: t("scores.updateScore.toast.description", {
+            player: variables.playerName,
+            score: aggregateScore(result.values, game.aggregation),
+          }),
           color: "success",
         });
       },
@@ -143,7 +153,9 @@ const ChangePlayerScoreModal: React.FC<{
   return (
     <Modal isOpen onOpenChange={onClose}>
       <ModalContent>
-        <ModalHeader>{`Изменить очки игрока "${player.name}"`}</ModalHeader>
+        <ModalHeader>
+          {t("scores.updateScore.title", { player: player.name })}
+        </ModalHeader>
         <ModalBody className="w-full">
           {localScores.map((localScore, index) => {
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -174,7 +186,7 @@ const ChangePlayerScoreModal: React.FC<{
             onPress={saveLocalPlayerName}
             isDisabled={Object.keys(localScores).length === 0}
           >
-            Сохранить
+            {t("common.save")}
           </Button>
         </ModalBody>
       </ModalContent>
@@ -185,67 +197,70 @@ const ChangePlayerScoreModal: React.FC<{
 const RecordInfoModal: React.FC<{
   record: PackedScore | undefined;
   onClose: () => void;
-}> = ({ record, onClose }) => (
-  <Modal isOpen={Boolean(record)} onOpenChange={onClose}>
-    <ModalContent>
-      <ModalHeader>Информация о достижении</ModalHeader>
-      <ModalBody className="w-full">
-        <Table>
-          <TableHeader
-            columns={[
-              {
-                key: "score",
-                label: "Очки",
-              },
-              {
-                key: "playerName",
-                label: "Имя игрока",
-              },
-              {
-                key: "createdAt",
-                label: "Первый результат",
-              },
-              {
-                key: "updatedAt",
-                label: "Последний результат",
-              },
-              {
-                key: "moderator",
-                label: "Поставил",
-              },
-            ]}
-          >
-            {(column) => (
-              <TableColumn key={column.key}>{column.label}</TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            items={record?.players ?? []}
-            emptyContent="Результатов пока нет, сыграй в эту игру!"
-          >
-            {(player) => (
-              <TableRow key={player.score}>
-                {(columnKey) => {
-                  // @ts-expect-error We don't care much
-                  const value = player[columnKey as keyof player];
-                  return (
-                    <TableCell className="px-2">
-                      {value instanceof Date
-                        ? value.toLocaleTimeString()
-                        : typeof value === "object"
-                          ? value.name
-                          : String(value)}
-                    </TableCell>
-                  );
-                }}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </ModalBody>
-    </ModalContent>
-  </Modal>
-);
+}> = ({ record, onClose }) => {
+  const { t } = useTranslation();
+  return (
+    <Modal isOpen={Boolean(record)} onOpenChange={onClose}>
+      <ModalContent>
+        <ModalHeader>{t("scores.record.title")}</ModalHeader>
+        <ModalBody className="w-full">
+          <Table>
+            <TableHeader
+              columns={[
+                {
+                  key: "score",
+                  label: t("scores.record.columns.score"),
+                },
+                {
+                  key: "playerName",
+                  label: t("scores.record.columns.playerName"),
+                },
+                {
+                  key: "createdAt",
+                  label: t("scores.record.columns.first"),
+                },
+                {
+                  key: "updatedAt",
+                  label: t("scores.record.columns.last"),
+                },
+                {
+                  key: "moderator",
+                  label: t("scores.record.columns.moderator"),
+                },
+              ]}
+            >
+              {(column) => (
+                <TableColumn key={column.key}>{column.label}</TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              items={record?.players ?? []}
+              emptyContent={t("scores.table.emptyContent")}
+            >
+              {(player) => (
+                <TableRow key={player.score}>
+                  {(columnKey) => {
+                    // @ts-expect-error We don't care much
+                    const value = player[columnKey as keyof player];
+                    return (
+                      <TableCell className="px-2">
+                        {value instanceof Date
+                          ? value.toLocaleTimeString()
+                          : typeof value === "object"
+                            ? value.name
+                            : String(value)}
+                      </TableCell>
+                    );
+                  }}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
 
 const FADE_LENGTH = 300 * 1000;
 const getFadeStart = (delta: number) =>
@@ -256,6 +271,7 @@ const ScoreBoard: React.FC<{
   game: GameType;
 }> = ({ game, rawData: scores }) => {
   const trpc = useTRPC();
+  const { t, language } = useTranslation();
   const aggregatedData = scores.map((score) => ({
     scores: score.values,
     score: aggregateScore(score.values, game.aggregation),
@@ -292,8 +308,10 @@ const ScoreBoard: React.FC<{
     trpc.scores.remove.mutationOptions({
       onSuccess: (_result, variables) => {
         addToast({
-          title: "Успех",
-          description: `Рекорд игрока "${variables.playerName}" удален.`,
+          title: t("common.success"),
+          description: t("scores.removeScore.toast.description", {
+            player: variables.playerName,
+          }),
           color: "success",
         });
       },
@@ -395,7 +413,7 @@ const ScoreBoard: React.FC<{
                   : "cursor-pointer"
               }
             >
-              {formatScore(packedScore.score, game.formatting)}
+              {formatScore(packedScore.score, game.formatting, { language })}
             </div>
           );
         }
@@ -416,7 +434,7 @@ const ScoreBoard: React.FC<{
           return null;
       }
     },
-    [game.formatting, game.id, moderatorStatus, removeScoreMutation],
+    [game.formatting, game.id, moderatorStatus, removeScoreMutation, language],
   );
   return (
     <>
@@ -425,7 +443,7 @@ const ScoreBoard: React.FC<{
         removeWrapper
         isStriped
         isCompact
-        aria-label="Таблица результатов"
+        aria-label={t("scores.table.title")}
         classNames={{
           tr: "border-b last:border-none border-foreground/30",
         }}
@@ -435,7 +453,7 @@ const ScoreBoard: React.FC<{
         </TableHeader>
         <TableBody
           items={packedData}
-          emptyContent="Результатов пока нет, сыграй в эту игру!"
+          emptyContent={t("scores.table.emptyContent")}
         >
           {(item) => {
             const maxUpdatedAt = item.players.reduce(

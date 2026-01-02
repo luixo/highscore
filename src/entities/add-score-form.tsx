@@ -18,6 +18,7 @@ import { playerNameSchema, scoresSchema } from "~/server/schemas";
 import { aggregateScore } from "~/utils/aggregation";
 import { getAllErrors } from "~/utils/form";
 import { formatScore } from "~/utils/format";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 import type { GameType } from "~/utils/types";
 
@@ -66,6 +67,7 @@ const ScoresForm: React.FC<{
 );
 
 const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
+  const { t, language } = useTranslation();
   const getDefaultValues = React.useCallback(
     (): z.infer<typeof formSchema> => ({
       playerName: "",
@@ -98,7 +100,7 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
     },
     onSubmitInvalid: ({ formApi }) => {
       addToast({
-        title: "Ошибка",
+        title: t("common.error"),
         description: getAllErrors(formApi),
         color: "danger",
       });
@@ -115,8 +117,18 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
         );
         if (matchedGame) {
           addToast({
-            title: "Успех",
-            description: `Результат "${formatScore(aggregateScore(variables.scores.values, matchedGame.aggregation), matchedGame.formatting)}" для игрока "${variables.playerName}" добавлен`,
+            title: t("common.success"),
+            description: t("addScore.toast.description", {
+              score: formatScore(
+                aggregateScore(
+                  variables.scores.values,
+                  matchedGame.aggregation,
+                ),
+                matchedGame.formatting,
+                { language },
+              ),
+              player: variables.playerName,
+            }),
             color: "success",
           });
         }
@@ -137,7 +149,7 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
           <form.AppField name="playerName">
             {(field) => (
               <field.TextField
-                label="Имя игрока"
+                label={t("addScore.form.player.label")}
                 value={field.state.value}
                 onValueChange={field.setValue}
                 name={field.name}
@@ -154,7 +166,9 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
             inputs={game.inputs}
             isPending={addScoreMutation.isPending}
           />
-          <form.SubmitButton isDisabled={!game.id}>Добавить</form.SubmitButton>
+          <form.SubmitButton isDisabled={!game.id}>
+            {t("addScore.form.button")}
+          </form.SubmitButton>
         </form.Form>
       </form.AppForm>
       <Game game={game} />
@@ -164,6 +178,7 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 
 const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
   ({ eventId }) => {
+    const { t } = useTranslation();
     const trpc = useTRPC();
     const { gameId, setGameId, removeGameId } = useLastGame(eventId);
     const { data: games } = useSuspenseQuery(
@@ -204,8 +219,8 @@ const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
     return (
       <>
         <Select
-          label="Игра"
-          placeholder="Выбери игру"
+          label={t("addScore.game.label")}
+          placeholder={t("addScore.game.placeholder")}
           selectedKeys={gameId ? [gameId] : []}
           variant="bordered"
           onSelectionChange={onSelectionChange}
@@ -223,9 +238,12 @@ const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
   <Skeleton className="h-14 w-full rounded-md" />,
 );
 
-export const AddScoreForm: React.FC<{ eventId: string }> = ({ eventId }) => (
-  <div className="flex flex-col items-center gap-3">
-    <h3 className="text-2xl font-semibold">Добавить результат</h3>
-    <AddScoreGames eventId={eventId} />
-  </div>
-);
+export const AddScoreForm: React.FC<{ eventId: string }> = ({ eventId }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <h3 className="text-2xl font-semibold">{t("addScore.title")}</h3>
+      <AddScoreGames eventId={eventId} />
+    </div>
+  );
+};

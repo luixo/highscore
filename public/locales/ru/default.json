@@ -1,0 +1,233 @@
+{
+  "common": {
+    "title": "Список рекордов",
+    "error": "Ошибка",
+    "success": "Успех",
+    "save": "Сохранить"
+  },
+  "settings": {
+    "title": "Настройки",
+    "langSwitcher": {
+      "title": "Язык"
+    }
+  },
+  "addScore": {
+    "title": "Добавить результат",
+    "game": {
+      "label": "Игра",
+      "placeholder": "Выбери игру"
+    },
+    "form": {
+      "button": "Добавить",
+      "player": {
+        "label": "Имя игрока"
+      }
+    },
+    "toast": {
+      "description": "Результат \"{{score}}\" для игрока \"{{player}}\" добавлен"
+    }
+  },
+  "addModerator": {
+    "title": "Добавить модератора",
+    "form": {
+      "name": {
+        "label": "Имя"
+      },
+      "key": {
+        "Label": "Ключ модератора"
+      },
+      "button": "Добавить"
+    },
+    "toast": {
+      "description": "Модератор \"{{name}}\" добавлен"
+    }
+  },
+  "createEvent": {
+    "title": "Новое событие",
+    "form": {
+      "title": {
+        "label": "Название",
+        "placeholder": "Супер игры"
+      },
+      "adminName": {
+        "label": "Имя администратора",
+        "placeholder": "Василий"
+      },
+      "adminKey": {
+        "label": "Ключ администратора",
+        "placeholder": "очень-секретное-значение"
+      },
+      "submitButton": "Создать"
+    },
+    "toast": {
+      "description": "Событие \"{{title}}\" добавлено"
+    }
+  },
+  "login": {
+    "title": "Вход",
+    "form": {
+      "key": {
+        "label": "Ключ"
+      },
+      "button": "Сохранить",
+      "logoutButton": "Выйти"
+    },
+    "toast": {
+      "success": {
+        "description": "Авторизация успешна"
+      },
+      "error": {
+        "description": "Ключ \"{{key}}\" не найден!"
+      }
+    }
+  },
+  "allTabs": {
+    "scores": "Результаты",
+    "moderation": "Модерация"
+  },
+  "moderatorTabs": {
+    "record": "Рекорд",
+    "game": "Игра",
+    "moderator": "Модератор"
+  },
+  "scoreList": {
+    "noGames": "Игр пока что нет"
+  },
+  "scores": {
+    "table": {
+      "title": "Таблица результатов",
+      "emptyContent": "Результатов пока нет, сыграй в эту игру!"
+    },
+    "removeScore": {
+      "toast": {
+        "description": "Рекорд игрока \"{{player}}\" удален"
+      }
+    },
+    "updateScore": {
+      "title": "Изменить очки игрока \"{{player}}\"",
+      "toast": {
+        "description": "Рекорд игрока \"{{player}}\" обновлен: {{score}}"
+      }
+    },
+    "renamePlayer": {
+      "title": "Переименовать игрока \"{{player}}\"",
+      "toast": {
+        "description": "Имя игрока \"{{name}}\" обновлено"
+      }
+    },
+    "record": {
+      "title": "Информация о достижении",
+      "columns": {
+        "score": "Очки",
+        "playerName": "Имя игрока",
+        "first": "Первый результат",
+        "last": "Последний результат",
+        "moderator": "Поставил"
+      }
+    }
+  },
+  "moderatorsList": {
+    "keyLabel": "Ключ",
+    "nameLabel": "Имя"
+  },
+  "event": {
+    "game": "Игра \"{{title}}\"",
+    "notFound": "Событие \"{{id}}\" не найдено"
+  },
+  "game": {
+    "removed": "Игра \"{{id}}\" удалена"
+  },
+  "events": {
+    "inviteMessage": "Попроси пригласить тебя в игру!"
+  },
+  "index": {
+    "title": "Список игр"
+  },
+  "notFound": {
+    "home": "Домой",
+    "message": "Ты попал куда-то не туда, друг"
+  },
+  "addGame": {
+    "title": "Добавить игру",
+    "form": {
+      "title": {
+        "label": "Название игры"
+      },
+      "logoUrl": {
+        "label": "URL логотипа"
+      },
+      "formatting": {
+        "title": "Форматирование",
+        "label": "Форматирование результатов",
+        "placeholder": "Форматирование результата",
+        "options": {
+          "time": "Как время",
+          "special": "Специальное форматирование"
+        }
+      },
+      "inputs": {
+        "title": "Ввод",
+        "defaultDescription": "Очки",
+        "field": {
+          "title": "Поле #{{index}}",
+          "hidden": {
+            "label": "Скрыто"
+          },
+          "description": {
+            "label": "Описание поля ввода",
+            "placeholder": "За сколько выполнено"
+          },
+          "key": {
+            "label": "Ключ поля ввода",
+            "placeholder": "default"
+          },
+          "type": {
+            "counter": "Инкремент счетчика",
+            "number": "Значение по умолчанию"
+          }
+        }
+      },
+      "regex": {
+        "label": "Регулярное выражение форматирование",
+        "placeholder": "%value% {ложка|ложки|ложек}"
+      },
+      "precision": {
+        "label": "Значимых знаков",
+        "placeholder": "4"
+      },
+      "sorting": {
+        "title": "Сортировка",
+        "label": "Сортировка",
+        "placeholder": "Выбери как сортировать результаты",
+        "options": {
+          "asc": "Меньше лучше",
+          "desc": "Больше лучше"
+        }
+      },
+      "aggregation": {
+        "title": "Агрегация",
+        "options": {
+          "sum": "Сумма",
+          "diff": "Разница",
+          "div": "Частное",
+          "mul": "Произведение"
+        },
+        "key": {
+          "label": "Ключ значения",
+          "placeholder": "Выбери из значений"
+        },
+        "defaultValue": {
+          "label": "Значение по умолчанию"
+        },
+        "weight": {
+          "label": "Вес (от 0 до 1)"
+        }
+      },
+      "resultPreview": "Результат:",
+      "submitButton": "Добавить"
+    },
+    "toast": {
+      "description": "Игра \"{{title}}\" добавлена"
+    }
+  }
+}

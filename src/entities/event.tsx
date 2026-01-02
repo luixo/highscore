@@ -7,17 +7,21 @@ import { RemoveButton } from "~/components/remove-button";
 import { ErrorComponent, suspendedFallback } from "~/entities/suspense-wrapper";
 import { useVisitedEvents } from "~/hooks/use-visited-events";
 import type { AppRouter } from "~/server/routers/_app";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 export const Event = suspendedFallback<{ id: string }>(
   ({ id }) => {
     const trpc = useTRPC();
+    const { t } = useTranslation();
     const { data: event } = useSuspenseQuery(
       trpc.events.get.queryOptions({ id }),
     );
     return (
       <Link href={`/events/${id}`} className="inline-flex gap-2">
-        <span className="text-lg">{`Игра "${event.title}"`}</span>
+        <span className="text-lg">
+          {t("event.game", { title: event.title })}
+        </span>
         <Button isIconOnly color="primary">
           <CiPlay1 size="24" />
         </Button>
@@ -26,6 +30,7 @@ export const Event = suspendedFallback<{ id: string }>(
   },
   <Skeleton className="h-10 w-64 rounded-lg" />,
   ({ error, id, ...props }) => {
+    const { t } = useTranslation();
     const { removeEvent } = useVisitedEvents();
     if (
       error instanceof TRPCClientError &&
@@ -33,7 +38,7 @@ export const Event = suspendedFallback<{ id: string }>(
     ) {
       return (
         <div className="flex gap-4">
-          <span>{`Event "${id}" not found`}</span>
+          <span>{t("event.notFound", { id })}</span>
           <RemoveButton onClick={() => removeEvent(id)} />
         </div>
       );

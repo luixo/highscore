@@ -7,19 +7,21 @@ import { ModeratorTabs } from "~/entities/moderator-tabs";
 import { ScoreList } from "~/entities/score-list";
 import { useModeratorStatus } from "~/hooks/use-moderator-status";
 import type { EventId } from "~/server/schemas";
+import { useTranslation } from "~/utils/i18n";
 
 export const AllTabs: React.FC<{ eventId: EventId }> = ({ eventId }) => {
   const moderatorStatus = useModeratorStatus({ eventId });
+  const { t } = useTranslation();
   if (!moderatorStatus) {
     return <ScoreList eventId={eventId} />;
   }
   return (
     <Tabs>
-      <Tab key="scores" title="Результаты">
+      <Tab key="scores" title={t("allTabs.scores")}>
         <ScoreList eventId={eventId} />
       </Tab>
       {!moderatorStatus ? null : (
-        <Tab key="moderator" title="Модерация">
+        <Tab key="moderator" title={t("allTabs.moderation")}>
           <ModeratorTabs eventId={eventId}>
             <AddScoreForm eventId={eventId} />
           </ModeratorTabs>

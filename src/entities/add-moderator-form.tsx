@@ -8,6 +8,7 @@ import { useAppForm } from "~/hooks/use-app-form";
 import type { EventId } from "~/server/schemas";
 import { moderatorKeySchema, moderatorNameSchema } from "~/server/schemas";
 import { getAllErrors } from "~/utils/form";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = z.strictObject({
@@ -19,6 +20,7 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
   eventId,
 }) => {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const getDefaultValues = React.useCallback(
     (): z.infer<typeof formSchema> => ({ name: "", key: "" }),
@@ -28,8 +30,10 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
     trpc.moderator.add.mutationOptions({
       onSuccess: (result) => {
         addToast({
-          title: "Успех",
-          description: `Модератор "${result.name}" добавлен`,
+          title: t("common.success"),
+          description: t("addModerator.toast.description", {
+            name: result.name,
+          }),
           color: "success",
         });
         form.reset(getDefaultValues());
@@ -57,7 +61,7 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
     },
     onSubmitInvalid: ({ formApi }) => {
       addToast({
-        title: "Ошибка",
+        title: t("common.error"),
         description: getAllErrors(formApi),
         color: "danger",
       });
@@ -72,11 +76,11 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
           form.handleSubmit();
         }}
       >
-        <h3 className="text-2xl font-semibold">Добавить модератора</h3>
+        <h3 className="text-2xl font-semibold">{t("addModerator.title")}</h3>
         <form.AppField name="name">
           {(field) => (
             <field.TextField
-              label="Имя"
+              label={t("addModerator.form.name.label")}
               value={field.state.value}
               onValueChange={field.setValue}
               name={field.name}
@@ -90,7 +94,7 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
         <form.AppField name="key">
           {(field) => (
             <field.TextField
-              label="Ключ модератора"
+              label={t("addModerator.form.key.Label")}
               value={field.state.value}
               onValueChange={field.setValue}
               name={field.name}
@@ -101,7 +105,7 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
             />
           )}
         </form.AppField>
-        <form.SubmitButton>Добавить</form.SubmitButton>
+        <form.SubmitButton>{t("addModerator.form.button")}</form.SubmitButton>
       </form.Form>
     </form.AppForm>
   );

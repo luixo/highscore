@@ -26,12 +26,14 @@ import { aggregateScore } from "~/utils/aggregation";
 import { getUuid } from "~/utils/crypto";
 import { getAllErrors } from "~/utils/form";
 import { DEFAULT_PRECISION, formatScore } from "~/utils/format";
+import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = addGameSchema.omit({ eventId: true });
 type FormType = z.infer<typeof formSchema>;
 
 const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
+  const { t, language } = useTranslation();
   const inputs = useStore(form.store, (state) => state.values.inputs.values);
   const aggregation = useStore(form.store, (state) => state.values.aggregation);
   const [mockValues, setMockValues] = React.useState<number[]>([]);
@@ -52,12 +54,14 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
     : DEFAULT_PRECISION;
   return (
     <>
-      <h4 className="text-xl font-semibold">Форматирование</h4>
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.formatting.title")}
+      </h4>
       <form.AppField name="formatting">
         {(field) => (
           <Select
-            label="Форматирование результатов"
-            placeholder="Форматирование результата"
+            label={t("addGame.form.formatting.label")}
+            placeholder={t("addGame.form.formatting.placeholder")}
             selectedKeys={field.state.value ? [field.state.value.type] : []}
             variant="bordered"
             onSelectionChange={(selection) => {
@@ -88,8 +92,12 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
               }
             }}
           >
-            <SelectItem key="time">Как время</SelectItem>
-            <SelectItem key="regex">Специальное форматирование</SelectItem>
+            <SelectItem key="time">
+              {t("addGame.form.formatting.options.time")}
+            </SelectItem>
+            <SelectItem key="regex">
+              {t("addGame.form.formatting.options.special")}
+            </SelectItem>
           </Select>
         )}
       </form.AppField>
@@ -98,8 +106,8 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
           field.state.value.type === "regex" ? (
             <field.TextField
               isRequired
-              label="Регулярное выражение форматирование"
-              placeholder="%value% {ложка|ложки|ложек}"
+              label={t("addGame.form.regex.label")}
+              placeholder={t("addGame.form.regex.placeholder")}
               value={field.state.value.regex}
               onValueChange={(value) =>
                 field.setValue((prevValue) => ({
@@ -121,8 +129,8 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
         {(field) => (
           <field.NumberField
             isRequired
-            label="Значимых знаков"
-            placeholder="4"
+            label={t("addGame.form.precision.label")}
+            placeholder={t("addGame.form.precision.placeholder")}
             value={field.state.value}
             onValueChange={field.setValue}
             name={field.name}
@@ -140,8 +148,10 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
           </Code>
         ))}
       </div>
-      <span>Результат:</span>
-      <Code>{formatScore(score, { ...formatting, precision })}</Code>
+      <span>{t("addGame.form.resultPreview")}</span>
+      <Code>
+        {formatScore(score, { ...formatting, precision }, { language })}
+      </Code>
     </>
   );
 };
@@ -179,157 +189,179 @@ const InputButtonGroup: React.FC<{
   </ButtonGroup>
 );
 
-const InputsForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => (
-  <div className="flex w-full flex-col items-start gap-4">
-    <h4 className="text-xl font-semibold">Ввод</h4>
-    <form.AppField name="inputs.values" mode="array">
-      {(field) => (
-        <>
-          {field.state.value.map((fieldValue, index) => (
-            <form.Field key={fieldValue.key} name={`inputs.values[${index}]`}>
-              {(subField) => (
-                <div
-                  key={fieldValue.key}
-                  className="flex w-full flex-col gap-2"
-                >
-                  <>
-                    <div className="flex w-full items-center justify-between gap-2">
-                      <h5>Поле #{index}</h5>
-                      <div className="flex gap-2">
-                        <InputButtonGroup onClick={subField.setValue} />
-                        <Button
-                          color="danger"
-                          isIconOnly
-                          size="sm"
-                          onPress={() => field.removeValue(index)}
-                        >
-                          <CiCircleRemove />
-                        </Button>
+const InputsForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex w-full flex-col items-start gap-4">
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.inputs.title")}
+      </h4>
+      <form.AppField name="inputs.values" mode="array">
+        {(field) => (
+          <>
+            {field.state.value.map((fieldValue, index) => (
+              <form.Field key={fieldValue.key} name={`inputs.values[${index}]`}>
+                {(subField) => (
+                  <div
+                    key={fieldValue.key}
+                    className="flex w-full flex-col gap-2"
+                  >
+                    <>
+                      <div className="flex w-full items-center justify-between gap-2">
+                        <h5>
+                          {t("addGame.form.inputs.field.title", { index })}
+                        </h5>
+                        <div className="flex gap-2">
+                          <InputButtonGroup onClick={subField.setValue} />
+                          <Button
+                            color="danger"
+                            isIconOnly
+                            size="sm"
+                            onPress={() => field.removeValue(index)}
+                          >
+                            <CiCircleRemove />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                    <form.Field name={`inputs.values[${index}].description`}>
-                      {(localField) => (
-                        <field.TextField
-                          isRequired
-                          label="Описание поля ввода"
-                          placeholder="За сколько выполнено"
-                          value={localField.state.value}
-                          onValueChange={localField.setValue}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          fieldError={
-                            field.state.meta.isDirty
-                              ? field.state.meta.errors
-                              : undefined
-                          }
-                        />
-                      )}
-                    </form.Field>
-                    <form.Field name={`inputs.values[${index}].key`}>
-                      {(localField) => (
-                        <field.TextField
-                          isRequired
-                          label="Ключ поля ввода"
-                          placeholder="default"
-                          value={localField.state.value}
-                          onValueChange={localField.setValue}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          fieldError={
-                            field.state.meta.isDirty
-                              ? field.state.meta.errors
-                              : undefined
-                          }
-                        />
-                      )}
-                    </form.Field>
-                    <form.Field name={`inputs.values[${index}].defaultValue`}>
-                      {(localField) => (
-                        <field.NumberField
-                          isRequired
-                          label={
-                            subField.state.value.type === "counter"
-                              ? "Инкремент счетчика"
-                              : "Значение по умолчанию"
-                          }
-                          placeholder="0"
-                          value={localField.state.value}
-                          onValueChange={localField.setValue}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          fieldError={
-                            field.state.meta.isDirty
-                              ? field.state.meta.errors
-                              : undefined
-                          }
-                        />
-                      )}
-                    </form.Field>
-                    <form.Field name={`inputs.values[${index}].hidden`}>
-                      {(localField) => (
-                        <field.SwitchField
-                          isSelected={localField.state.value ?? false}
-                          onValueChange={localField.setValue}
-                          name={field.name}
-                          onBlur={field.handleBlur}
-                          fieldError={
-                            field.state.meta.isDirty
-                              ? field.state.meta.errors
-                              : undefined
-                          }
-                        >
-                          Скрыто
-                        </field.SwitchField>
-                      )}
-                    </form.Field>
-                  </>
-                </div>
-              )}
-            </form.Field>
-          ))}
-          <InputButtonGroup
-            onClick={() =>
-              field.pushValue({
-                type: "number",
-                description: "",
-                key: getUuid(),
-                defaultValue: 0,
-              })
-            }
-          />
-        </>
-      )}
-    </form.AppField>
-  </div>
-);
+                      <form.Field name={`inputs.values[${index}].description`}>
+                        {(localField) => (
+                          <field.TextField
+                            isRequired
+                            label={t(
+                              "addGame.form.inputs.field.description.label",
+                            )}
+                            placeholder={t(
+                              "addGame.form.inputs.field.description.placeholder",
+                            )}
+                            value={localField.state.value}
+                            onValueChange={localField.setValue}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            fieldError={
+                              field.state.meta.isDirty
+                                ? field.state.meta.errors
+                                : undefined
+                            }
+                          />
+                        )}
+                      </form.Field>
+                      <form.Field name={`inputs.values[${index}].key`}>
+                        {(localField) => (
+                          <field.TextField
+                            isRequired
+                            label={t("addGame.form.inputs.field.key.label")}
+                            placeholder={t(
+                              "addGame.form.inputs.field.key.placeholder",
+                            )}
+                            value={localField.state.value}
+                            onValueChange={localField.setValue}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            fieldError={
+                              field.state.meta.isDirty
+                                ? field.state.meta.errors
+                                : undefined
+                            }
+                          />
+                        )}
+                      </form.Field>
+                      <form.Field name={`inputs.values[${index}].defaultValue`}>
+                        {(localField) => (
+                          <field.NumberField
+                            isRequired
+                            label={
+                              subField.state.value.type === "counter"
+                                ? t("addGame.form.inputs.field.type.counter")
+                                : t("addGame.form.inputs.field.type.number")
+                            }
+                            placeholder="0"
+                            value={localField.state.value}
+                            onValueChange={localField.setValue}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            fieldError={
+                              field.state.meta.isDirty
+                                ? field.state.meta.errors
+                                : undefined
+                            }
+                          />
+                        )}
+                      </form.Field>
+                      <form.Field name={`inputs.values[${index}].hidden`}>
+                        {(localField) => (
+                          <field.SwitchField
+                            isSelected={localField.state.value ?? false}
+                            onValueChange={localField.setValue}
+                            name={field.name}
+                            onBlur={field.handleBlur}
+                            fieldError={
+                              field.state.meta.isDirty
+                                ? field.state.meta.errors
+                                : undefined
+                            }
+                          >
+                            {t("addGame.form.inputs.field.hidden.label")}
+                          </field.SwitchField>
+                        )}
+                      </form.Field>
+                    </>
+                  </div>
+                )}
+              </form.Field>
+            ))}
+            <InputButtonGroup
+              onClick={() =>
+                field.pushValue({
+                  type: "number",
+                  description: "",
+                  key: getUuid(),
+                  defaultValue: 0,
+                })
+              }
+            />
+          </>
+        )}
+      </form.AppField>
+    </div>
+  );
+};
 
-const SortForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => (
-  <>
-    <h4 className="text-xl font-semibold">Сортировка</h4>
-    <form.AppField name="sort.direction">
-      {(field) => (
-        <Select
-          label="Сортировка"
-          placeholder="Выбери как сортировать результаты"
-          selectedKeys={[field.state.value]}
-          variant="bordered"
-          isRequired
-          onSelectionChange={(selection) => {
-            if (selection === "all") {
-              return;
-            } else {
-              const selected = [...selection.keys()][0] as "asc" | "desc";
-              field.setValue(selected);
-            }
-          }}
-        >
-          <SelectItem key="asc">Меньше лучше</SelectItem>
-          <SelectItem key="desc">Больше лучше</SelectItem>
-        </Select>
-      )}
-    </form.AppField>
-  </>
-);
+const SortForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.sorting.title")}
+      </h4>
+      <form.AppField name="sort.direction">
+        {(field) => (
+          <Select
+            label={t("addGame.form.sorting.label")}
+            placeholder={t("addGame.form.sorting.placeholder")}
+            selectedKeys={[field.state.value]}
+            variant="bordered"
+            isRequired
+            onSelectionChange={(selection) => {
+              if (selection === "all") {
+                return;
+              } else {
+                const selected = [...selection.keys()][0] as "asc" | "desc";
+                field.setValue(selected);
+              }
+            }}
+          >
+            <SelectItem key="asc">
+              {t("addGame.form.sorting.options.asc")}
+            </SelectItem>
+            <SelectItem key="desc">
+              {t("addGame.form.sorting.options.desc")}
+            </SelectItem>
+          </Select>
+        )}
+      </form.AppField>
+    </>
+  );
+};
 
 const collectKeys = (
   aggregation: z.infer<typeof aggregationSchema>,
@@ -364,14 +396,15 @@ const AggregationValueForm: React.FC<{
     Pick<z.infer<typeof aggregationSchema>, "type">
   >;
 }> = ({ form, path }) => {
+  const { t } = useTranslation();
   const inputKeys = useKeys(form);
   return (
     <>
       <form.AppField name={`${path}.key` as "aggregation.key"}>
         {(field) => (
           <Select
-            label="Ключ значения"
-            placeholder="Выбери из значений"
+            label={t("addGame.form.aggregation.key.label")}
+            placeholder={t("addGame.form.aggregation.key.placeholder")}
             selectedKeys={[field.state.value]}
             variant="bordered"
             isRequired
@@ -396,7 +429,7 @@ const AggregationValueForm: React.FC<{
         {(field) => (
           <field.NumberField
             isRequired
-            label="Значение по умолчанию"
+            label={t("addGame.form.aggregation.defaultValue.label")}
             placeholder="0"
             value={field.state.value}
             onValueChange={field.setValue}
@@ -411,7 +444,7 @@ const AggregationValueForm: React.FC<{
       <form.AppField name={`${path}.weight` as "aggregation.weight"}>
         {(field) => (
           <field.NumberField
-            label="Вес (от 0 до 1)"
+            label={t("addGame.form.aggregation.weight.label")}
             min={0}
             max={1}
             placeholder="0.5"
@@ -520,6 +553,42 @@ const SwitchAggregationForm: React.FC<{
   }
 };
 
+const AggregationElement: React.FC<{
+  form: AppForm<FormType>;
+  index: number;
+  onSet: (value: z.infer<typeof aggregationSchema>) => void;
+  onRemove?: () => void;
+  value: z.infer<typeof aggregationSchema>;
+  path: DeepKeysOfType<
+    FormType,
+    Pick<z.infer<typeof aggregationSchema>, "type">
+  >;
+}> = ({ form, index, onSet, onRemove, value, path }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <h5 className="text-medium font-semibold">
+          {t("addGame.form.inputs.field.title", { index })}
+        </h5>
+        <div className="flex gap-2">
+          <AggregationButtonGroup form={form} onClick={onSet} color="primary" />
+          <Button
+            color="danger"
+            isIconOnly
+            size="sm"
+            onPress={() => onRemove?.()}
+            isDisabled={!onRemove}
+          >
+            <CiCircleRemove />
+          </Button>
+        </div>
+      </div>
+      <SwitchAggregationForm form={form} path={path} aggregation={value} />
+    </>
+  );
+};
+
 const MultipleAggregationForm = withFieldGroup({
   defaultValues: {
     type: "multiply",
@@ -542,39 +611,24 @@ const MultipleAggregationForm = withFieldGroup({
                 const localPath =
                   `${path}.values[${index}]` as `aggregation.values[${number}]`;
                 return (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <h5 className="text-medium font-semibold">
-                        Поле #{index}
-                      </h5>
-                      <div className="flex gap-2">
-                        <AggregationButtonGroup
-                          form={form}
-                          onClick={(value) =>
-                            // @ts-expect-error We're simplifying schema to make ts work
-                            group.setFieldValue(localPath, value)
+                  <AggregationElement
+                    key={index}
+                    form={form}
+                    value={fieldValue}
+                    index={index}
+                    onSet={(value) => {
+                      // @ts-expect-error We're simplifying schema to make ts work
+                      group.setFieldValue(localPath, value);
+                    }}
+                    onRemove={
+                      field.state.value.length === 1
+                        ? undefined
+                        : () => {
+                            group.removeFieldValue("values", index);
                           }
-                          color="primary"
-                        />
-                        <Button
-                          color="danger"
-                          isIconOnly
-                          size="sm"
-                          onPress={() =>
-                            group.removeFieldValue("values", index)
-                          }
-                          isDisabled={field.state.value.length === 1}
-                        >
-                          <CiCircleRemove />
-                        </Button>
-                      </div>
-                    </div>
-                    <SwitchAggregationForm
-                      form={form}
-                      path={localPath}
-                      aggregation={fieldValue}
-                    />
-                  </>
+                    }
+                    path={localPath}
+                  />
                 );
               })}
             </div>
@@ -602,12 +656,17 @@ const AggregationSumForm: React.FC<{
     FormType,
     Pick<z.infer<typeof aggregationSchema>, "type">
   >;
-}> = ({ form, path }) => (
-  <div className="flex w-full flex-col items-start gap-2 pl-4">
-    <h4 className="text-xl font-semibold">Сумма</h4>
-    <MultipleAggregationForm form={form} fields={path} path={path} />
-  </div>
-);
+}> = ({ form, path }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex w-full flex-col items-start gap-2 pl-4">
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.aggregation.options.sum")}
+      </h4>
+      <MultipleAggregationForm form={form} fields={path} path={path} />
+    </div>
+  );
+};
 
 const AggregationDifferenceForm: React.FC<{
   form: AppForm<FormType>;
@@ -615,12 +674,17 @@ const AggregationDifferenceForm: React.FC<{
     FormType,
     Pick<z.infer<typeof aggregationSchema>, "type">
   >;
-}> = ({ form, path }) => (
-  <div className="flex w-full flex-col items-start gap-2 pl-4">
-    <h4 className="text-xl font-semibold">Разница</h4>
-    <MultipleAggregationForm form={form} fields={path} path={path} />
-  </div>
-);
+}> = ({ form, path }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex w-full flex-col items-start gap-2 pl-4">
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.aggregation.options.diff")}
+      </h4>
+      <MultipleAggregationForm form={form} fields={path} path={path} />
+    </div>
+  );
+};
 
 const AggregationDivisionForm: React.FC<{
   form: AppForm<FormType>;
@@ -628,12 +692,17 @@ const AggregationDivisionForm: React.FC<{
     FormType,
     Pick<z.infer<typeof aggregationSchema>, "type">
   >;
-}> = ({ form, path }) => (
-  <div className="flex w-full flex-col items-start gap-2 pl-4">
-    <h4 className="text-xl font-semibold">Частное</h4>
-    <MultipleAggregationForm form={form} fields={path} path={path} />
-  </div>
-);
+}> = ({ form, path }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex w-full flex-col items-start gap-2 pl-4">
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.aggregation.options.div")}
+      </h4>
+      <MultipleAggregationForm form={form} fields={path} path={path} />
+    </div>
+  );
+};
 
 const AggregationMultiplyForm: React.FC<{
   form: AppForm<FormType>;
@@ -641,37 +710,48 @@ const AggregationMultiplyForm: React.FC<{
     FormType,
     Pick<z.infer<typeof aggregationSchema>, "type">
   >;
-}> = ({ form, path }) => (
-  <div className="flex w-full flex-col items-start gap-2 pl-4">
-    <h4 className="text-xl font-semibold">Произведение</h4>
-    <MultipleAggregationForm form={form} fields={path} path={path} />
-  </div>
-);
-
-const AggregationForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => (
-  <>
-    <div className="flex w-full justify-between">
-      <h4 className="text-xl font-semibold">Агрегация</h4>
-      <AggregationButtonGroup
-        form={form}
-        onClick={(value) => form.setFieldValue("aggregation", value)}
-        color="primary"
-      />
+}> = ({ form, path }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex w-full flex-col items-start gap-2 pl-4">
+      <h4 className="text-xl font-semibold">
+        {t("addGame.form.aggregation.options.mul")}
+      </h4>
+      <MultipleAggregationForm form={form} fields={path} path={path} />
     </div>
-    <form.Subscribe selector={(state) => state.values.aggregation}>
-      {(value) => (
-        <SwitchAggregationForm
+  );
+};
+
+const AggregationForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="flex w-full justify-between">
+        <h4 className="text-xl font-semibold">
+          {t("addGame.form.aggregation.title")}
+        </h4>
+        <AggregationButtonGroup
           form={form}
-          path="aggregation"
-          aggregation={value}
+          onClick={(value) => form.setFieldValue("aggregation", value)}
+          color="primary"
         />
-      )}
-    </form.Subscribe>
-  </>
-);
+      </div>
+      <form.Subscribe selector={(state) => state.values.aggregation}>
+        {(value) => (
+          <SwitchAggregationForm
+            form={form}
+            path="aggregation"
+            aggregation={value}
+          />
+        )}
+      </form.Subscribe>
+    </>
+  );
+};
 
 export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
   const trpc = useTRPC();
+  const { t } = useTranslation();
   const getDefaultValues = React.useCallback(
     (): z.infer<typeof formSchema> => ({
       title: "",
@@ -688,7 +768,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
             type: "number",
             key: "default",
             defaultValue: 0,
-            description: "Очки",
+            description: t("addGame.form.inputs.defaultDescription"),
           },
         ],
       },
@@ -698,7 +778,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
         defaultValue: 0,
       },
     }),
-    [],
+    [t],
   );
   const form = useAppForm({
     defaultValues: getDefaultValues(),
@@ -710,7 +790,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
     },
     onSubmitInvalid: ({ formApi }) => {
       addToast({
-        title: "Ошибка",
+        title: t("common.error"),
         description: getAllErrors(formApi),
         color: "danger",
       });
@@ -720,8 +800,8 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
     trpc.games.add.mutationOptions({
       onSuccess: (result) => {
         addToast({
-          title: "Успех",
-          description: `Игра "${result.title}" добавлена`,
+          title: t("common.success"),
+          description: t("addGame.toast.description", { title: result.title }),
           color: "success",
         });
         form.reset(getDefaultValues());
@@ -737,12 +817,12 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
           form.handleSubmit();
         }}
       >
-        <h3 className="text-2xl font-semibold">Добавить игру</h3>
+        <h3 className="text-2xl font-semibold">{t("addGame.title")}</h3>
         <form.AppField name="title">
           {(field) => (
             <field.TextField
               isRequired
-              label="Название игры"
+              label={t("addGame.form.title.label")}
               value={field.state.value}
               onValueChange={field.setValue}
               name={field.name}
@@ -756,7 +836,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
         <form.AppField name="logoUrl">
           {(field) => (
             <field.TextField
-              label="URL логотипа"
+              label={t("addGame.form.logoUrl.label")}
               value={field.state.value}
               onValueChange={field.setValue}
               name={field.name}
@@ -775,7 +855,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
         <FormatForm form={form} />
         <Divider className="my-2" />
         <SortForm form={form} />
-        <form.SubmitButton>Добавить</form.SubmitButton>
+        <form.SubmitButton>{t("addGame.form.submitButton")}</form.SubmitButton>
       </form.Form>
     </form.AppForm>
   );

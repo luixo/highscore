@@ -3,7 +3,8 @@
 import React from "react";
 
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   HeadContent,
   Outlet,
@@ -20,22 +21,18 @@ import {
 import type { AppRouter } from "~/server/routers/_app";
 import { moderatorKeysSchema } from "~/server/schemas";
 import appCss from "~/styles/app.css?url";
-import { queryClientConfig } from "~/utils/query";
+import type { createI18nContext } from "~/utils/i18n";
 import { TRPCProvider, links } from "~/utils/trpc";
 
 const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [queryClient] = React.useState(
-    () => new QueryClient(queryClientConfig),
-  );
+  const queryClient = useQueryClient();
   const [trpcClient] = React.useState(() =>
     createTRPCClient<AppRouter>({ links }),
   );
   return (
-    <QueryClientProvider client={queryClient}>
-      <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
-        {children}
-      </TRPCProvider>
-    </QueryClientProvider>
+    <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
+      {children}
+    </TRPCProvider>
   );
 };
 
@@ -51,13 +48,30 @@ const RootComponent = () => {
   );
 };
 
-type RouterContext = {
+export type RouterContext = {
   cookies: Record<string, string | undefined>;
-  queryClient: QueryClient;
+  queryClient: QueryClient & {
+    context: RouterContext;
+  };
+  i18n: ReturnType<typeof createI18nContext>;
 };
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  head: () => ({
+  loader: async ({ context }) => {
+    const moderatorKeysParseResult = moderatorKeysSchema.safeParse(
+      context.cookies[MODERATOR_COOKIE_KEYS]
+        ? decodeURIComponent(context.cookies[MODERATOR_COOKIE_KEYS])
+        : undefined,
+    );
+    await context.i18n.loadNamespace("default");
+    return {
+      title: context.i18n.getTranslation()("common.title"),
+      moderatorKeys: moderatorKeysParseResult.success
+        ? moderatorKeysParseResult.data
+        : {},
+    };
+  },
+  head: ({ loaderData }) => ({
     meta: [
       {
         charSet: "utf-8",
@@ -66,7 +80,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         name: "viewport",
         content: "width=device-width, initial-scale=1",
       },
-      { title: "Книга рекордов" },
+      loaderData ? { title: loaderData.title } : undefined,
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -87,20 +101,8 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   }),
   ssr: false,
   component: RootComponent,
-  loader: async ({ context }) => {
-    const moderatorKeysParseResult = moderatorKeysSchema.safeParse(
-      context.cookies[MODERATOR_COOKIE_KEYS]
-        ? decodeURIComponent(context.cookies[MODERATOR_COOKIE_KEYS])
-        : undefined,
-    );
-    return {
-      moderatorKeys: moderatorKeysParseResult.success
-        ? moderatorKeysParseResult.data
-        : {},
-    };
-  },
   shellComponent: ({ children }) => (
-    <html lang="ru" className="dark">
+    <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
