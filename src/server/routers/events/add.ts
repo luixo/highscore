@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
 import {
+  eventAliasSchema,
   eventNameSchema,
   moderatorKeySchema,
   moderatorNameSchema,
@@ -13,17 +14,18 @@ export const procedure = publicProcedure
   .input(
     z.object({
       title: eventNameSchema,
+      alias: eventAliasSchema.optional(),
       adminName: moderatorNameSchema,
       adminKey: moderatorKeySchema,
     }),
   )
-  .mutation(async ({ input: { title, adminKey, adminName } }) => {
+  .mutation(async ({ input: { title, alias, adminKey, adminName } }) => {
     const db = getDatabase();
     const id = v4();
     const result = await db
       .insertInto("events")
-      .values({ id, title })
-      .returning(["id", "title"])
+      .values({ id, title, alias })
+      .returning(["id", "title", "alias"])
       .executeTakeFirstOrThrow();
     await db
       .insertInto("moderators")

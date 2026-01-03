@@ -22,7 +22,7 @@ export const Events: React.FC = () => {
       {events
         .toSorted((eventA, eventB) => eventB.lastVisited - eventA.lastVisited)
         .map((event) => (
-          <Event key={event.eventId} id={event.eventId} />
+          <Event key={event.event.id} {...event.event} />
         ))}
     </div>
   );

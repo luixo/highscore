@@ -7,16 +7,19 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
+  Spinner,
   addToast,
 } from "@heroui/react";
+import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { CiCirclePlus } from "react-icons/ci";
+import { CiCircleCheck, CiCirclePlus, CiCircleRemove } from "react-icons/ci";
 import { z } from "zod";
 
 import { ModeratorContext } from "~/contexts/moderator-context";
 import { useAppForm } from "~/hooks/use-app-form";
 import {
+  eventAliasSchema,
   eventNameSchema,
   moderatorKeySchema,
   moderatorNameSchema,
@@ -29,11 +32,16 @@ const formSchema = z.strictObject({
   title: eventNameSchema,
   adminKey: moderatorKeySchema,
   adminName: moderatorNameSchema,
+  alias: eventAliasSchema.optional(),
 });
 
 export const CreateEventModal: React.FC = () => {
   const trpc = useTRPC();
   const { t } = useTranslation();
+
+  const verifyAliasMutation = useMutation(
+    trpc.events.aliasAvailable.mutationOptions(),
+  );
   const [modalOpen, setModalOpen] = React.useState(false);
   const router = useRouter();
   const getDefaultValues = React.useCallback(
@@ -41,19 +49,21 @@ export const CreateEventModal: React.FC = () => {
       title: "",
       adminKey: "",
       adminName: "",
+      alias: "",
     }),
     [],
   );
   const form = useAppForm({
     defaultValues: getDefaultValues(),
     validators: {
-      onChange: formSchema,
+      onChangeAsync: formSchema,
     },
     onSubmit: ({ value }) => {
       addEventMutation.mutate({
         title: value.title,
         adminKey: value.adminKey,
         adminName: value.adminName,
+        alias: value.alias || undefined,
       });
     },
     onSubmitInvalid: ({ formApi }) => {
@@ -114,6 +124,53 @@ export const CreateEventModal: React.FC = () => {
                       label={t("createEvent.form.title.label")}
                       isRequired
                       placeholder={t("createEvent.form.title.placeholder")}
+                      value={field.state.value}
+                      onValueChange={field.setValue}
+                      name={field.name}
+                      onBlur={field.handleBlur}
+                      fieldError={
+                        field.state.meta.isDirty
+                          ? field.state.meta.errors
+                          : undefined
+                      }
+                    />
+                  )}
+                </form.AppField>
+                <form.AppField
+                  name="alias"
+                  asyncDebounceMs={500}
+                  validators={{
+                    onChangeAsync: async ({ value, fieldApi }) => {
+                      if (!fieldApi.getMeta().isValid || !value) {
+                        return undefined;
+                      }
+                      const result = await verifyAliasMutation.mutateAsync({
+                        alias: value,
+                      });
+                      return result
+                        ? undefined
+                        : ({
+                            message: t("createEvent.form.alias.error"),
+                            path: ["alias"],
+                          } satisfies StandardSchemaV1Issue);
+                    },
+                  }}
+                >
+                  {(field) => (
+                    <field.TextField
+                      label={t("createEvent.form.alias.label")}
+                      isRequired
+                      placeholder={t("createEvent.form.alias.placeholder")}
+                      endContent={
+                        field.state.meta.isDefaultValue ? null : field.state
+                            .meta.isValidating ? (
+                          <Spinner size="sm" />
+                        ) : field.state.meta.isValid ? (
+                          <CiCircleCheck className="text-success-700 size-5" />
+                        ) : (
+                          <CiCircleRemove className="text-danger-700 size-5" />
+                        )
+                      }
                       value={field.state.value}
                       onValueChange={field.setValue}
                       name={field.name}

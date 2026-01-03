@@ -10,7 +10,7 @@ import type { AppRouter } from "~/server/routers/_app";
 import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
-export const Event = suspendedFallback<{ id: string }>(
+export const Event = suspendedFallback<{ id: string; alias?: string }>(
   ({ id }) => {
     const trpc = useTRPC();
     const { t } = useTranslation();

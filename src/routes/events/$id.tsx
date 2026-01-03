@@ -4,7 +4,7 @@ import { Page } from "~/pages/event";
 
 const Wrapper = () => {
   const { id } = Route.useParams();
-  return <Page id={id} />;
+  return <Page idOrAlias={id} />;
 };
 export const Route = createFileRoute("/events/$id")({
   component: Wrapper,

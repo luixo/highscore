@@ -2,27 +2,31 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
-import { eventIdSchema } from "~/server/schemas";
+import { eventAliasSchema, eventIdSchema } from "~/server/schemas";
 import { publicProcedure } from "~/server/trpc";
 
 export const procedure = publicProcedure
   .input(
     z.object({
-      id: eventIdSchema,
+      idOrAlias: eventIdSchema.or(eventAliasSchema),
     }),
   )
-  .query(async ({ input: { id } }) => {
+  .query(async ({ input: { idOrAlias } }) => {
+    const id = eventIdSchema.safeParse(idOrAlias).data;
     const db = getDatabase();
     const result = await db
       .selectFrom("events")
-      .where("id", "=", id)
-      .select(["id", "title", "alias"])
+      .where((qb) => qb.or({ id: id, alias: idOrAlias }))
+      .select(["id", "alias"])
       .executeTakeFirst();
     if (!result) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: `Event id "${id}" not found.`,
+        message: `Event id or alias "${idOrAlias}" not found.`,
       });
     }
-    return result;
+    return {
+      id: result.id,
+      alias: result.alias ?? undefined,
+    };
   });

@@ -22,6 +22,15 @@ export type GameId = z.infer<typeof gameIdSchema>;
 export const logoUrlSchema = z.string().url();
 
 export const eventNameSchema = z.string().min(1).max(64);
+export const eventAliasSchema = z
+  .string()
+  .min(3, { abort: true })
+  .max(64, { abort: true })
+  .regex(/^[a-z0-9_-]+$/, {
+    message:
+      "Only lowercase alphanumeric, dashes, and underscores are allowed.",
+    abort: true,
+  });
 
 export const playerNameSchema = z.string().min(1).max(64);
 

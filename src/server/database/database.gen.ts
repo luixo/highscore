@@ -28,6 +28,7 @@ export type Moderatorrole = "admin" | "moderator";
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface Events {
+  alias: string | null;
   createdAt: Generated<Timestamp>;
   id: Generated<string>;
   title: string;

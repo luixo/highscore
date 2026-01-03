@@ -64,11 +64,19 @@ export const formatScore = (
   switch (formatting.type) {
     case "time": {
       const duration = Temporal.Duration.from({
-        milliseconds: Math.floor(score * 1000)
+        milliseconds: Math.floor(score * 1000),
       }).round({
-        relativeTo: Temporal.PlainDate.from(new Date().toISOString().slice(0, 10)), largestUnit: 'year'
+        relativeTo: Temporal.PlainDate.from(
+          new Date().toISOString().slice(0, 10),
+        ),
+        largestUnit: "year",
       });
-      return new Intl.DurationFormat(language, { style: "narrow", fractionalDigits: formatting.precision as 1, seconds: 'narrow', milliseconds: "numeric" }).format(duration);
+      return new Intl.DurationFormat(language, {
+        style: "narrow",
+        fractionalDigits: formatting.precision as 1,
+        seconds: "narrow",
+        milliseconds: "numeric",
+      }).format(duration);
     }
     case "regex": {
       const numberFormat = new Intl.NumberFormat(language, {

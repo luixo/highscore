@@ -50,6 +50,11 @@
         "label": "Title",
         "placeholder": "Miraculuos games"
       },
+      "alias": {
+        "label": "Alias",
+        "placeholder": "my-games",
+        "error": "Alias is already taken"
+      },
       "adminName": {
         "label": "Admin name",
         "placeholder": "Johnny"

@@ -1,0 +1,21 @@
+import { z } from "zod";
+
+import { getDatabase } from "~/server/database/database";
+import { eventAliasSchema } from "~/server/schemas";
+import { publicProcedure } from "~/server/trpc";
+
+export const procedure = publicProcedure
+  .input(
+    z.object({
+      alias: eventAliasSchema,
+    }),
+  )
+  .mutation(async ({ input: { alias } }) => {
+    const db = getDatabase();
+    const result = await db
+      .selectFrom("events")
+      .where("alias", "=", alias)
+      .select(["id"])
+      .executeTakeFirst();
+    return !result;
+  });

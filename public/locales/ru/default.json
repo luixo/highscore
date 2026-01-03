@@ -49,6 +49,11 @@
         "label": "Название",
         "placeholder": "Супер игры"
       },
+      "alias": {
+        "label": "Ссылка",
+        "placeholder": "my-games",
+        "error": "Такая ссылка уже существует"
+      },
       "adminName": {
         "label": "Имя администратора",
         "placeholder": "Василий"

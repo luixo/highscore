@@ -1,43 +1,56 @@
-import { useCallback } from "react";
+import React, { useCallback } from "react";
 
 import { useLocalStorage } from "usehooks-ts";
+import { z } from "zod";
+
+import { eventAliasSchema, eventIdSchema } from "~/server/schemas";
+
+const visitedEventSchema = z.object({
+  event: z.object({
+    id: eventIdSchema,
+    alias: eventAliasSchema.optional(),
+  }),
+  lastVisited: z.number(),
+});
 
 export const useVisitedEvents = () => {
   const [events, setEvents] = useLocalStorage<
-    {
-      eventId: string;
-      lastVisited: number;
-    }[]
+    z.infer<typeof visitedEventSchema>[]
   >("visitedEvents", []);
+  const parsedEvents = visitedEventSchema.array().safeParse(events);
+  React.useEffect(() => {
+    if (!parsedEvents.success) {
+      setEvents([]);
+    }
+  }, [parsedEvents, setEvents]);
   return {
-    events,
+    events: parsedEvents.data ?? [],
     removeEvent: useCallback(
       (id: string) => {
         setEvents((prevEvents) =>
-          (prevEvents ?? []).filter((event) => event.eventId !== id),
+          (prevEvents ?? []).filter(({ event }) => event.id !== id),
         );
       },
       [setEvents],
     ),
     upsertEvent: useCallback(
-      (id: string) => {
+      (event: { id: string; alias?: string }) => {
         setEvents((prevEvents) => {
-          const nextEvents = prevEvents ?? [];
-          const event = {
-            eventId: id,
+          const nextEntity = {
+            event,
             lastVisited: Date.now(),
           };
-          const eventIndex = nextEvents.findIndex(
-            (event) => event.eventId === id,
+          const eventIndex = prevEvents.findIndex(
+            ({ event }) => event.id === nextEntity.event.id,
           );
           if (eventIndex !== -1) {
             return [
-              ...nextEvents.slice(0, eventIndex),
-              event,
-              ...nextEvents.slice(eventIndex + 1),
+              ...prevEvents.slice(0, eventIndex),
+              nextEntity,
+              ...prevEvents.slice(eventIndex + 1),
             ];
           }
-          return [...nextEvents, event];
+          return [...prevEvents, nextEntity];
         });
       },
       [setEvents],
