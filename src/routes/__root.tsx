@@ -24,27 +24,21 @@ import appCss from "~/styles/app.css?url";
 import type { createI18nContext } from "~/utils/i18n";
 import { TRPCProvider, links } from "~/utils/trpc";
 
-const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
+const RootComponent = () => {
+  const { moderatorKeys } = Route.useLoaderData();
   const queryClient = useQueryClient();
   const [trpcClient] = React.useState(() =>
     createTRPCClient<AppRouter>({ links }),
   );
   return (
     <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
-      {children}
+      <ModeratorProvider initialKeys={moderatorKeys}>
+        <HeroUIProvider>
+          <Outlet />
+          <ToastProvider />
+        </HeroUIProvider>
+      </ModeratorProvider>
     </TRPCProvider>
-  );
-};
-
-const RootComponent = () => {
-  const { moderatorKeys } = Route.useLoaderData();
-  return (
-    <ModeratorProvider initialKeys={moderatorKeys}>
-      <HeroUIProvider>
-        <Outlet />
-        <ToastProvider />
-      </HeroUIProvider>
-    </ModeratorProvider>
   );
 };
 
@@ -99,20 +93,17 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { rel: "icon", href: "/favicon.ico" },
     ],
   }),
-  ssr: false,
   component: RootComponent,
   shellComponent: ({ children }) => (
     <html lang="en" className="dark">
       <head>
         <HeadContent />
       </head>
-      <Providers>
-        <body className="p-4">
-          <main>{children}</main>
-          <Scripts />
-          <Devtools />
-        </body>
-      </Providers>
+      <body className="p-4">
+        <main>{children}</main>
+        <Scripts />
+        <Devtools />
+      </body>
     </html>
   ),
 });
