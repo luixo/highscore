@@ -24,5 +24,5 @@ export const procedure = publicProcedure
         message: `Event id "${id}" not found.`,
       });
     }
-    return result;
+    return { ...result, alias: result.alias ?? undefined };
   });

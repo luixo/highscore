@@ -34,6 +34,12 @@ const formSchema = z.strictObject({
   adminName: moderatorNameSchema,
   alias: eventAliasSchema.optional(),
 });
+const getDefaultValues = (): z.infer<typeof formSchema> => ({
+  title: "",
+  adminKey: "",
+  adminName: "",
+  alias: "",
+});
 
 export const CreateEventModal: React.FC = () => {
   const trpc = useTRPC();
@@ -44,15 +50,6 @@ export const CreateEventModal: React.FC = () => {
   );
   const [modalOpen, setModalOpen] = React.useState(false);
   const router = useRouter();
-  const getDefaultValues = React.useCallback(
-    (): z.infer<typeof formSchema> => ({
-      title: "",
-      adminKey: "",
-      adminName: "",
-      alias: "",
-    }),
-    [],
-  );
   const form = useAppForm({
     defaultValues: getDefaultValues(),
     validators: {

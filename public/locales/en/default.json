@@ -42,7 +42,6 @@
       "description": "Moderator \"{{name}}\" added"
     }
   },
-
   "createEvent": {
     "title": "New event",
     "form": {
@@ -69,6 +68,23 @@
       "description": "Event \"{{title}}\" added"
     }
   },
+  "updateEvent": {
+    "form": {
+      "title": {
+        "label": "Title",
+        "placeholder": "Miraculuos games"
+      },
+      "alias": {
+        "label": "Alias",
+        "placeholder": "my-games",
+        "error": "Alias is already taken"
+      },
+      "submitButton": "Update"
+    },
+    "toast": {
+      "description": "Event \"{{title}}\" updated"
+    }
+  },
   "login": {
     "title": "Login",
     "form": {
@@ -89,12 +105,13 @@
   },
   "allTabs": {
     "scores": "Scores",
-    "moderation": "Moderation"
+    "moderation": "Moderation",
+    "admin": "Admin"
   },
-  "moderatorTabs": {
-    "record": "Record",
-    "game": "Game",
-    "moderator": "Moderator"
+  "adminTabs": {
+    "addGame": "Add game",
+    "addModerator": "Add moderator",
+    "modifyEvent": "Modify event"
   },
   "scoreList": {
     "noGames": "No games yet"

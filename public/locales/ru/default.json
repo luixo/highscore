@@ -68,6 +68,23 @@
       "description": "Событие \"{{title}}\" добавлено"
     }
   },
+  "updateEvent": {
+    "form": {
+      "title": {
+        "label": "Название",
+        "placeholder": "Супер игры"
+      },
+      "alias": {
+        "label": "Ссылка",
+        "placeholder": "my-games",
+        "error": "Такая ссылка уже существует"
+      },
+      "submitButton": "Обновить"
+    },
+    "toast": {
+      "description": "Событие \"{{title}}\" обновлено"
+    }
+  },
   "login": {
     "title": "Вход",
     "form": {
@@ -88,12 +105,13 @@
   },
   "allTabs": {
     "scores": "Результаты",
-    "moderation": "Модерация"
+    "moderation": "Модерация",
+    "admin": "Администрирование"
   },
-  "moderatorTabs": {
-    "record": "Рекорд",
-    "game": "Игра",
-    "moderator": "Модератор"
+  "adminTabs": {
+    "addGame": "Добавить игру",
+    "addModerator": "Добавить модератора",
+    "modifyEvent": "Настройки события"
   },
   "scoreList": {
     "noGames": "Игр пока что нет"
