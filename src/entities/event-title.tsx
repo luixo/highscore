@@ -25,7 +25,11 @@ export const EventTitle = suspendedFallback<{ eventId: string }>(
         router.navigate({ to: "/" });
       }
     }, [eventId, eventQuery.error, eventQuery.status, removeEvent, router]);
-    return <span>{eventQuery.data.title}</span>;
+    return (
+      <h1 className="text-[clamp(1rem,10vw,2rem)] leading-tight font-semibold tracking-tight sm:text-[clamp(1rem,10vw,3rem)] lg:text-5xl">
+        {eventQuery.data.title}
+      </h1>
+    );
   },
-  <Skeleton className="h-6 w-24 rounded-md" />,
+  <Skeleton className="h-10 w-48 rounded-md" />,
 );

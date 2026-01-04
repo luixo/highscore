@@ -108,11 +108,9 @@ const PageWithId: React.FC<{
             >
               <CiHome size={20} />
             </Button>
-            <h1 className="text-[clamp(1rem,10vw,2rem)] leading-tight font-semibold tracking-tight sm:text-[clamp(1rem,10vw,3rem)] lg:text-5xl">
-              {t("common.title")}
-            </h1>
+            <EventTitle eventId={event.id} />
           </div>
-          <EventTitle eventId={event.id} />
+          <span>{t("common.title")}</span>
         </div>
         <div className="flex items-center gap-3">
           <SettingsButton eventId={event.id} />
