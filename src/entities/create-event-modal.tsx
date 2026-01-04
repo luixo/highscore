@@ -156,7 +156,6 @@ export const CreateEventModal: React.FC = () => {
                   {(field) => (
                     <field.TextField
                       label={t("createEvent.form.alias.label")}
-                      isRequired
                       placeholder={t("createEvent.form.alias.placeholder")}
                       endContent={
                         field.state.meta.isDefaultValue ? null : field.state
