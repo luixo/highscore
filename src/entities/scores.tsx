@@ -22,6 +22,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { CiMedal } from "react-icons/ci";
+import { twMerge } from "tailwind-merge";
 import type { z } from "zod";
 
 import { RemoveButton } from "~/components/remove-button";
@@ -378,6 +379,7 @@ const ScoreBoard: React.FC<{
                   </div>
                   {packedScore.players.length !== 1 && moderatorStatus ? (
                     <RemoveButton
+                      className="size-4"
                       onClick={() =>
                         removeScoreMutation.mutate({
                           gameId: game.id,
@@ -418,9 +420,11 @@ const ScoreBoard: React.FC<{
           );
         }
         case "actions":
+          if (packedScore.players.length !== 1) {
+            return null;
+          }
           return (
             <RemoveButton
-              isDisabled={packedScore.players.length !== 1}
               onClick={() =>
                 removeScoreMutation.mutate({
                   gameId: game.id,
@@ -463,12 +467,10 @@ const ScoreBoard: React.FC<{
             return (
               <TableRow
                 key={item.score}
-                className={[
+                className={twMerge(
                   "transition-colors",
                   "animate-[fadeBackground_120s_linear_forwards]",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
+                )}
                 style={{
                   "--bg-start": getFadeStart(
                     // TODO: Fix it
