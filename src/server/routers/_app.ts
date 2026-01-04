@@ -4,6 +4,7 @@ import { router as eventsRouter } from "./events/index";
 import { router as gamesRouter } from "./games/index";
 import { router as moderatorRouter } from "./moderators/index";
 import { router as scoresRouter } from "./scores/index";
+import { router as utilsRouter } from "./utils/index";
 
 export const appRouter = router({
   healthcheck: publicProcedure.query(() => "OK"),
@@ -11,6 +12,7 @@ export const appRouter = router({
   scores: scoresRouter,
   moderator: moderatorRouter,
   events: eventsRouter,
+  utils: utilsRouter,
 });
 
 export const createCaller = createCallerFactory(appRouter);

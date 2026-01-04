@@ -7,7 +7,9 @@ import {
 import {
   createTRPCClient,
   httpBatchStreamLink,
+  httpLink,
   loggerLink,
+  splitLink,
 } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
 
@@ -27,15 +29,20 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 3000}`;
 };
 
+const baseUrl = `${getBaseUrl()}/api/trpc`;
 export const links = [
   loggerLink({
     enabled: (opts) =>
       process.env.NODE_ENV === "development" ||
       (opts.direction === "down" && opts.result instanceof Error),
   }),
-  httpBatchStreamLink({
-    url: `${getBaseUrl()}/api/trpc`,
-    transformer,
+  splitLink({
+    condition: (op) => op.input instanceof FormData,
+    true: httpLink({ url: baseUrl, transformer }),
+    false: httpBatchStreamLink({
+      url: baseUrl,
+      transformer,
+    }),
   }),
 ];
 

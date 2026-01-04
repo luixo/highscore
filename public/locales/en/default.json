@@ -177,7 +177,8 @@
         "label": "Game title"
       },
       "logoUrl": {
-        "label": "Logo URL"
+        "label": "Logo URL",
+        "uploadButton": "Click to upload image"
       },
       "formatting": {
         "title": "Formatting",

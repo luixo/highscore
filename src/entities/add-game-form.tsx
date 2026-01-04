@@ -15,6 +15,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CiCircleRemove } from "react-icons/ci";
 import type { z } from "zod";
 
+import { UploadImage } from "~/entities/upload-image";
 import { type AppForm, useAppForm, withFieldGroup } from "~/hooks/use-app-form";
 import type {
   EventId,
@@ -851,18 +852,37 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
           )}
         </form.AppField>
         <form.AppField name="logoUrl">
-          {(field) => (
-            <field.TextField
-              label={t("addGame.form.logoUrl.label")}
-              value={field.state.value}
-              onValueChange={field.setValue}
-              name={field.name}
-              onBlur={field.handleBlur}
-              fieldError={
-                field.state.meta.isDirty ? field.state.meta.errors : undefined
-              }
-            />
-          )}
+          {(field) =>
+            field.state.value ? (
+              <field.TextField
+                label={t("addGame.form.logoUrl.label")}
+                value={field.state.value}
+                name={field.name}
+                isReadOnly
+                fieldError={
+                  field.state.meta.isDirty ? field.state.meta.errors : undefined
+                }
+                endContent={
+                  <CiCircleRemove
+                    className="text-danger-400 size-6 cursor-pointer"
+                    onClick={() => field.setValue(undefined)}
+                  />
+                }
+              />
+            ) : (
+              <UploadImage onUpload={(url) => field.setValue(url)}>
+                {({ onPress }) => (
+                  <Button
+                    onPress={onPress}
+                    color="secondary"
+                    className="w-full"
+                  >
+                    {t("addGame.form.logoUrl.uploadButton")}
+                  </Button>
+                )}
+              </UploadImage>
+            )
+          }
         </form.AppField>
         <Divider className="my-2" />
         <InputsForm form={form} />

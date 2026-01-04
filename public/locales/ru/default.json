@@ -177,7 +177,8 @@
         "label": "Название игры"
       },
       "logoUrl": {
-        "label": "URL логотипа"
+        "label": "URL логотипа",
+        "uploadButton": "Нажми чтобы загрузить картинку"
       },
       "formatting": {
         "title": "Форматирование",
