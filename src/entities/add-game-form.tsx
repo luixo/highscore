@@ -35,23 +35,16 @@ type FormType = z.infer<typeof formSchema>;
 const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
   const { t, language } = useTranslation();
   const inputs = useStore(form.store, (state) => state.values.inputs.values);
-  const aggregation = useStore(form.store, (state) => state.values.aggregation);
-  const [mockValues, setMockValues] = React.useState<number[]>([]);
+  const mockForm = useAppForm({
+    defaultValues: {
+      inputs: [] as number[],
+    },
+  });
   React.useEffect(() => {
-    setMockValues((values) =>
-      inputs.map((_, index) => values[index] ?? Math.random() * 1000),
+    mockForm.setFieldValue("inputs", (values) =>
+      inputs.map((input, index) => values[index] ?? input.defaultValue),
     );
-  }, [inputs]);
-  const mockedInputs = inputs.map((input, index) => ({
-    type: input.type,
-    key: input.key,
-    value: (input.defaultValue || mockValues[index]) ?? 0,
-  }));
-  const score = aggregateScore(mockedInputs, aggregation);
-  const formatting = useStore(form.store, (state) => state.values.formatting);
-  const precision = precisionSchema.safeParse(formatting.precision).success
-    ? formatting.precision
-    : DEFAULT_PRECISION;
+  }, [inputs, mockForm]);
   return (
     <>
       <h4 className="text-xl font-semibold">
@@ -141,17 +134,58 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
           />
         )}
       </form.AppField>
-      <div className="flex flex-wrap gap-2">
-        {mockedInputs.map((input) => (
-          <Code key={input.key}>
-            {input.key}: {input.value.toFixed(precision)}
-          </Code>
-        ))}
-      </div>
+      <mockForm.AppField name="inputs" mode="array">
+        {(field) => (
+          <div className="flex flex-wrap gap-2">
+            {field.state.value.map((_, index) => (
+              <mockForm.Field key={index} name={`inputs[${index}]`}>
+                {(subField) => (
+                  <field.NumberField
+                    key={subField.name}
+                    startContent={
+                      <span className="text-xs">
+                        {form
+                          .getFieldValue(`inputs.values[${index}]`)
+                          .key.slice(0, 8)}
+                      </span>
+                    }
+                    value={subField.state.value}
+                    onValueChange={(value) => subField.setValue(value)}
+                  />
+                )}
+              </mockForm.Field>
+            ))}
+          </div>
+        )}
+      </mockForm.AppField>
       <span>{t("addGame.form.resultPreview")}</span>
-      <Code>
-        {formatScore(score, { ...formatting, precision }, { language })}
-      </Code>
+      <mockForm.Subscribe selector={({ values }) => values.inputs}>
+        {(mockInputs) => (
+          <form.Subscribe
+            selector={({ values: { formatting, aggregation, inputs } }) => {
+              const precision = precisionSchema.safeParse(formatting.precision)
+                .success
+                ? formatting.precision
+                : DEFAULT_PRECISION;
+              const aggregatedScore = aggregateScore(
+                mockInputs.map((input, index) => ({
+                  type: "number",
+                  key: inputs.values[index]?.key ?? "unknown",
+                  value: input,
+                })),
+                aggregation,
+              );
+              return formatScore(
+                aggregatedScore,
+                { ...formatting, precision },
+                { language },
+              );
+            }}
+          >
+            {(score) => <Code>{score}</Code>}
+          </form.Subscribe>
+        )}
+      </mockForm.Subscribe>
     </>
   );
 };
