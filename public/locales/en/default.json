@@ -188,7 +188,6 @@
             "placeholder": "default"
           },
           "type": {
-            "counter": "Counter increment",
             "number": "Default value"
           }
         }

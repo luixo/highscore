@@ -187,7 +187,6 @@
             "placeholder": "default"
           },
           "type": {
-            "counter": "Инкремент счетчика",
             "number": "Значение по умолчанию"
           }
         }

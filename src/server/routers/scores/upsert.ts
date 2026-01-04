@@ -39,26 +39,7 @@ export const procedure = protectedProcedure
             playerName: playerNameInsensitive,
           }),
         )
-        .set({
-          values: {
-            ...scores,
-            values: scores.values.map((scoreValue) => {
-              const matchedValue = getScores(matchedScore?.values)?.values.find(
-                (score) => score.key === scoreValue.key,
-              );
-              if (scoreValue.type === "counter") {
-                if (!matchedValue) {
-                  return scoreValue;
-                }
-                return {
-                  ...scoreValue,
-                  value: matchedValue.value + scoreValue.value,
-                };
-              }
-              return scoreValue;
-            }),
-          },
-        })
+        .set({ values: scores })
         .returning(["createdAt", "updatedAt", "values", "moderatorId"])
         .executeTakeFirstOrThrow();
     } else {

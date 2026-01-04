@@ -64,18 +64,11 @@ const gameDefaultValueSchema = z.number();
 
 export const scoresSchema = z.object({
   values: z
-    .discriminatedUnion("type", [
-      z.strictObject({
-        type: z.literal("number"),
-        key: gameValueKeySchema,
-        value: z.number(),
-      }),
-      z.strictObject({
-        type: z.literal("counter"),
-        key: gameValueKeySchema,
-        value: z.number(),
-      }),
-    ])
+    .strictObject({
+      type: z.literal("number"),
+      key: gameValueKeySchema,
+      value: z.number(),
+    })
     .array(),
 });
 
@@ -145,22 +138,13 @@ const inputDescriptionSchema = z.string().min(1).max(30);
 
 export const inputsSchema = z.object({
   values: z
-    .discriminatedUnion("type", [
-      z.strictObject({
-        type: z.literal("number"),
-        description: inputDescriptionSchema,
-        key: gameValueKeySchema,
-        defaultValue: gameDefaultValueSchema,
-        hidden: z.boolean().optional(),
-      }),
-      z.strictObject({
-        type: z.literal("counter"),
-        description: inputDescriptionSchema,
-        key: gameValueKeySchema,
-        defaultValue: gameDefaultValueSchema,
-        hidden: z.boolean().optional(),
-      }),
-    ])
+    .strictObject({
+      type: z.literal("number"),
+      description: inputDescriptionSchema,
+      key: gameValueKeySchema,
+      defaultValue: gameDefaultValueSchema,
+      hidden: z.boolean().optional(),
+    })
     .array(),
 });
 

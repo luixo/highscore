@@ -173,19 +173,6 @@ const InputButtonGroup: React.FC<{
     >
       number
     </Button>
-    <Button
-      color="primary"
-      onPress={() =>
-        onClick({
-          type: "counter",
-          key: getUuid(),
-          description: "",
-          defaultValue: 0,
-        })
-      }
-    >
-      counter
-    </Button>
   </ButtonGroup>
 );
 
@@ -269,11 +256,7 @@ const InputsForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
                         {(localField) => (
                           <field.NumberField
                             isRequired
-                            label={
-                              subField.state.value.type === "counter"
-                                ? t("addGame.form.inputs.field.type.counter")
-                                : t("addGame.form.inputs.field.type.number")
-                            }
+                            label={t("addGame.form.inputs.field.type.number")}
                             placeholder="0"
                             value={localField.state.value}
                             onValueChange={localField.setValue}
