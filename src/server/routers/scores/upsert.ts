@@ -2,10 +2,11 @@ import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
 import type { Json } from "~/server/database/database.gen";
-import { getScores } from "~/server/jsons";
+import { getAggregation, getScores, getSort } from "~/server/jsons";
 import { protectedProcedure } from "~/server/router";
 import { gameIdSchema, playerNameSchema, scoresSchema } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
+import { aggregateScore } from "~/utils/aggregation";
 import type { ScoreType } from "~/utils/types";
 
 export const procedure = protectedProcedure
@@ -20,8 +21,15 @@ export const procedure = protectedProcedure
     const db = getDatabase();
     const matchedScore = await db
       .selectFrom("scores")
+      .innerJoin("games", (qb) => qb.onRef("games.id", "=", "scores.gameId"))
       .where(({ and }) => and({ gameId, playerName }))
-      .select(["playerName", "values"])
+      .select([
+        "playerName",
+        "values",
+        "games.aggregation",
+        "games.inputs",
+        "games.sort",
+      ])
       .executeTakeFirst();
     const playerNameInsensitive = matchedScore
       ? matchedScore.playerName
@@ -31,6 +39,21 @@ export const procedure = protectedProcedure
       moderatorId: string;
     };
     if (matchedScore) {
+      const prevScore = aggregateScore(
+        getScores(matchedScore.values).values,
+        getAggregation(matchedScore.aggregation),
+      );
+      const nextScore = aggregateScore(
+        scores.values,
+        getAggregation(matchedScore.aggregation),
+      );
+      const sorting = getSort(matchedScore.sort);
+      if (
+        (sorting.direction === "asc" && nextScore > prevScore) ||
+        (sorting.direction === "desc" && nextScore < prevScore)
+      ) {
+        return;
+      }
       result = await db
         .updateTable("scores")
         .where(({ and }) =>
