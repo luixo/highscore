@@ -135,7 +135,7 @@
     "renamePlayer": {
       "title": "Rename player \"{{player}}\"",
       "toast": {
-        "description": "Player \"{{name}}\" renamed"
+        "description": "Player \"{{prevName}}\" renamed to \"{{nextName}}\""
       }
     },
     "record": {

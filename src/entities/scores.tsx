@@ -52,13 +52,43 @@ const RenamePlayerModal: React.FC<{
       setLocalName(playerName);
     }
   }, [playerName]);
+  const queryClient = useQueryClient();
   const updateNameMutation = useMutation(
     trpc.scores.update.mutationOptions({
       onSuccess: (_result, variables) => {
+        if (variables.updateObject.type !== "playerName") {
+          return;
+        }
+        const nextPlayerName = variables.updateObject.playerName;
+        queryClient.setQueryData(
+          trpc.scores.list.queryKey({ gameId }),
+          (prevData) => {
+            if (!prevData) {
+              return prevData;
+            }
+            const matchedPlayerIndex = prevData.findIndex(
+              (player) => player.playerName === variables.playerName,
+            );
+            if (matchedPlayerIndex === -1) {
+              return prevData;
+            }
+            return [
+              ...prevData.slice(0, matchedPlayerIndex),
+              {
+                // We just checked it exists
+                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                ...prevData[matchedPlayerIndex]!,
+                playerName: nextPlayerName,
+              },
+              ...prevData.slice(matchedPlayerIndex + 1),
+            ];
+          },
+        );
         addToast({
           title: t("common.success"),
           description: t("scores.renamePlayer.toast.description", {
-            name: variables.playerName,
+            prevName: variables.playerName,
+            nextName: nextPlayerName,
           }),
           color: "success",
         });

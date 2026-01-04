@@ -135,7 +135,7 @@
     "renamePlayer": {
       "title": "Переименовать игрока \"{{player}}\"",
       "toast": {
-        "description": "Имя игрока \"{{name}}\" обновлено"
+        "description": "Игрок переименован из \"{{prevName}}\" в \"{{nextName}}\""
       }
     },
     "record": {
