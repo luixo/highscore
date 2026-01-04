@@ -14,7 +14,7 @@ export const AdminTabs: React.FC<{ event: RouterOutput["events"]["get"] }> =
   suspendedFallback(({ event }) => {
     const { t } = useTranslation();
     return (
-      <Tabs>
+      <Tabs className="w-full">
         <Tab key="add-game" title={t("adminTabs.addGame")}>
           <AddGameForm eventId={event.id} />
         </Tab>

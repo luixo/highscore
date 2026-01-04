@@ -22,7 +22,7 @@ export const AllTabs: React.FC<{ eventId: EventId }> = ({ eventId }) => {
     return <ScoreList eventId={event.id} />;
   }
   return (
-    <Tabs>
+    <Tabs className="w-full">
       <Tab key="scores" title={t("allTabs.scores")}>
         <ScoreList eventId={event.id} />
       </Tab>
