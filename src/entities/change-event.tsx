@@ -143,7 +143,7 @@ export const ChangeEvent: React.FC<{
           {(field) => (
             <field.TextField
               label={t("updateEvent.form.alias.label")}
-              isRequired
+              autoCapitalize="off"
               placeholder={t("updateEvent.form.alias.placeholder")}
               endContent={
                 field.state.meta.isDefaultValue ? null : field.state.meta

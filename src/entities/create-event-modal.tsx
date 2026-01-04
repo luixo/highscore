@@ -157,6 +157,7 @@ export const CreateEventModal: React.FC = () => {
                     <field.TextField
                       label={t("createEvent.form.alias.label")}
                       placeholder={t("createEvent.form.alias.placeholder")}
+                      autoCapitalize="off"
                       endContent={
                         field.state.meta.isDefaultValue ? null : field.state
                             .meta.isValidating ? (
