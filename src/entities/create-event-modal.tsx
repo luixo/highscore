@@ -38,7 +38,7 @@ const getDefaultValues = (): z.infer<typeof formSchema> => ({
   title: "",
   adminKey: "",
   adminName: "",
-  alias: "",
+  alias: undefined,
 });
 
 export const CreateEventModal: React.FC = () => {
@@ -53,7 +53,7 @@ export const CreateEventModal: React.FC = () => {
   const form = useAppForm({
     defaultValues: getDefaultValues(),
     validators: {
-      onChangeAsync: formSchema,
+      onChange: formSchema,
     },
     onSubmit: ({ value }) => {
       addEventMutation.mutate({
@@ -77,7 +77,7 @@ export const CreateEventModal: React.FC = () => {
       onSuccess: (result, variables) => {
         addToast({
           title: t("common.success"),
-          description: t("createEvent.form.submitButton", {
+          description: t("createEvent.toast.description", {
             title: result.title,
           }),
           color: "success",
