@@ -1,4 +1,4 @@
-import { router as trpcRouter } from "~/server/trpc";
+import { router as trpcRouter } from "~/server/router";
 
 import { procedure as listProcedure } from "./list";
 import { procedure as removeProcedure } from "./remove";

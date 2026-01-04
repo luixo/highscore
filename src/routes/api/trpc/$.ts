@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter } from "~/server/routers/_app";
+import { onError } from "~/server/trpc";
 
 const callback = async (request: Request) =>
   fetchRequestHandler({
@@ -9,22 +10,7 @@ const callback = async (request: Request) =>
     req: request,
     router: appRouter,
     createContext: (opts) => opts,
-    onError: ({ error, type, path, ctx }) => {
-      /* c8 ignore start */
-      if (!ctx) {
-        return;
-      }
-      /* c8 ignore stop */
-      if (error.code === "UNAUTHORIZED" && path === "account.get") {
-        // Do not log an attempt to fetch the account without a cookie
-        return;
-      }
-      console.error(
-        `[${error.code}] [${
-          ctx.req.headers.get("user-agent") ?? "no-user-agent"
-        }] ${type} "${path}": ${error.message}`,
-      );
-    },
+    onError,
   });
 
 export const Route = createFileRoute("/api/trpc/$")({

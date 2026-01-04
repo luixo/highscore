@@ -4780,6 +4780,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/react-router-ssr-query@npm:^1.144.0":
+  version: 1.144.0
+  resolution: "@tanstack/react-router-ssr-query@npm:1.144.0"
+  dependencies:
+    "@tanstack/router-ssr-query-core": "npm:1.144.0"
+  peerDependencies:
+    "@tanstack/query-core": ">=5.90.0"
+    "@tanstack/react-query": ">=5.90.0"
+    "@tanstack/react-router": ">=1.127.0"
+    react: ">=18.0.0 || >=19.0.0"
+    react-dom: ">=18.0.0 || >=19.0.0"
+  checksum: 10/0179c0800ccfc07717cd2c1f0d3bf339daf6f0e3086ae91c72f01d254ede982aacbef6e425ff90dc53170ce762e6a6f6a1d557d27a587067f51ec2c9197d4f7d
+  languageName: node
+  linkType: hard
+
 "@tanstack/react-router@npm:1.144.0, @tanstack/react-router@npm:^1.144.0":
   version: 1.144.0
   resolution: "@tanstack/react-router@npm:1.144.0"
@@ -4959,6 +4974,16 @@ __metadata:
     webpack:
       optional: true
   checksum: 10/6971019c8115edde2c825813e0cc5dd3dd56f2596056293d5845646d5a869edd8d69087741e64422ffd3c74a3e00be87f63ba6bb351ded633fbb4db61a225e17
+  languageName: node
+  linkType: hard
+
+"@tanstack/router-ssr-query-core@npm:1.144.0":
+  version: 1.144.0
+  resolution: "@tanstack/router-ssr-query-core@npm:1.144.0"
+  peerDependencies:
+    "@tanstack/query-core": ">=5.90.0"
+    "@tanstack/router-core": ">=1.127.0"
+  checksum: 10/4827245dac57677b8b2e5f8aaa2cb58d2db6e19f0997a6d8f9b78530d863ffa1908b224d05784c0827a5bece1720124647370443028363879940add6111c9860
   languageName: node
   linkType: hard
 
@@ -7981,6 +8006,7 @@ __metadata:
     "@tanstack/react-query-devtools": "npm:^5.91.2"
     "@tanstack/react-router": "npm:^1.144.0"
     "@tanstack/react-router-devtools": "npm:^1.144.0"
+    "@tanstack/react-router-ssr-query": "npm:^1.144.0"
     "@tanstack/react-start": "npm:^1.145.3"
     "@trpc/client": "npm:^11.8.1"
     "@trpc/server": "npm:^11.8.1"

@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
+import { publicProcedure } from "~/server/router";
 import { eventAliasSchema } from "~/server/schemas";
-import { publicProcedure } from "~/server/trpc";
 
 export const procedure = publicProcedure
   .input(

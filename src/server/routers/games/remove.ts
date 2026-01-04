@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
+import { adminProcedure } from "~/server/router";
 import { eventIdSchema, gameIdSchema } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
-import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(z.object({ eventId: eventIdSchema, id: gameIdSchema }))

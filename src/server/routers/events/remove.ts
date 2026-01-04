@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
+import { adminProcedure } from "~/server/router";
 import { eventIdSchema } from "~/server/schemas";
-import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(

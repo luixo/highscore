@@ -11,25 +11,21 @@ import {
   Scripts,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
-import { createTRPCClient } from "@trpc/client";
 
 import { Devtools } from "~/components/devtools";
 import {
   MODERATOR_COOKIE_KEYS,
   ModeratorProvider,
 } from "~/contexts/moderator-context";
-import type { AppRouter } from "~/server/routers/_app";
 import { moderatorKeysSchema } from "~/server/schemas";
 import appCss from "~/styles/app.css?url";
 import type { createI18nContext } from "~/utils/i18n";
-import { TRPCProvider, links } from "~/utils/trpc";
+import { TRPCProvider, getTrpcClient } from "~/utils/trpc";
 
 const RootComponent = () => {
   const { moderatorKeys } = Route.useLoaderData();
   const queryClient = useQueryClient();
-  const [trpcClient] = React.useState(() =>
-    createTRPCClient<AppRouter>({ links }),
-  );
+  const [trpcClient] = React.useState(getTrpcClient);
   return (
     <TRPCProvider queryClient={queryClient} trpcClient={trpcClient}>
       <ModeratorProvider initialKeys={moderatorKeys}>

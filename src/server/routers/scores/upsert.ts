@@ -3,9 +3,9 @@ import { z } from "zod";
 import { getDatabase } from "~/server/database/database";
 import type { Json } from "~/server/database/database.gen";
 import { getScores } from "~/server/jsons";
+import { protectedProcedure } from "~/server/router";
 import { gameIdSchema, playerNameSchema, scoresSchema } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
-import { protectedProcedure } from "~/server/trpc";
 import type { ScoreType } from "~/utils/types";
 
 export const procedure = protectedProcedure

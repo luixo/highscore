@@ -1,6 +1,7 @@
 import { Spinner } from "@heroui/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 
 import "temporal-polyfill/global";
 
@@ -24,7 +25,7 @@ export const getRouter = () => {
     i18n,
   };
   queryClient.context = context;
-  return createTanStackRouter({
+  const router = createTanStackRouter({
     context,
     dehydrate: () => ({
       i18n: i18n.serializeContext(),
@@ -37,12 +38,10 @@ export const getRouter = () => {
     defaultErrorComponent: DefaultCatchBoundary,
     defaultNotFoundComponent: NotFound,
     defaultPendingComponent: Spinner,
-    Wrap: ({ children }) => (
-      <QueryClientProvider client={queryClient}>
-        <i18n.Provider>{children}</i18n.Provider>
-      </QueryClientProvider>
-    ),
+    Wrap: ({ children }) => <i18n.Provider>{children}</i18n.Provider>,
   });
+  setupRouterSsrQueryIntegration({ router, queryClient });
+  return router;
 };
 
 declare module "@tanstack/react-router" {

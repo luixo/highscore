@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
 import { getScores } from "~/server/jsons";
+import { publicProcedure } from "~/server/router";
 import { gameIdSchema } from "~/server/schemas";
-import { publicProcedure } from "~/server/trpc";
 
 export const procedure = publicProcedure
   .input(

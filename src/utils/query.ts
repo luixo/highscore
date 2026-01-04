@@ -28,13 +28,15 @@ export const queryClientConfig: QueryClientConfig = {
       refetchInterval: (query) => {
         const queryKey = query.queryKey;
         if (
-          hashKey(queryKey) ===
-          hashKey([["moderator", "get"], { type: "query" }])
+          hashKey(queryKey[0] as unknown[]) === hashKey(["moderator", "get"])
         ) {
           return false;
         }
         return MINUTE;
       },
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
     },
   },
 };

@@ -2,8 +2,8 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
+import { protectedProcedure } from "~/server/router";
 import { eventIdSchema } from "~/server/schemas";
-import { protectedProcedure } from "~/server/trpc";
 
 export const procedure = protectedProcedure
   .input(

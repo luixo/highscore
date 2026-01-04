@@ -1,4 +1,4 @@
-import { createCallerFactory, publicProcedure, router } from "~/server/trpc";
+import { createCallerFactory, publicProcedure, router } from "~/server/router";
 
 import { router as eventsRouter } from "./events/index";
 import { router as gamesRouter } from "./games/index";

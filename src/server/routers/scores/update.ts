@@ -2,13 +2,13 @@ import { z } from "zod";
 
 import { getDatabase } from "~/server/database/database";
 import { getScores } from "~/server/jsons";
+import { adminProcedure } from "~/server/router";
 import {
   gameIdSchema,
   playerNameSchema,
   scoreUpdateObject,
 } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
-import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(

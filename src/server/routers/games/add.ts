@@ -7,9 +7,9 @@ import {
   getInputs,
   getSort,
 } from "~/server/jsons";
+import { adminProcedure } from "~/server/router";
 import { addGameSchema } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
-import { adminProcedure } from "~/server/trpc";
 
 export const procedure = adminProcedure
   .input(addGameSchema)
