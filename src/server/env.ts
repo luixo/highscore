@@ -4,7 +4,7 @@ const envSchema = z.object({
   DATABASE_URL: z.url(),
   NODE_ENV: z.enum(["development", "test", "production"]),
   VITE_PUSHER_APP_KEY: z.string(),
-  VITE_PUSHER_CLUSTER: z.string(),
+  VITE_PUSHER_HOST: z.string(),
   PUSHER_APP_ID: z.string(),
   PUSHER_SECRET: z.string(),
 });
