@@ -1,5 +1,4 @@
 import { router as trpcRouter } from "~/server/router";
-
 import { procedure as addProcedure } from "./add";
 import { procedure as aliasAvailableProcedure } from "./alias-available";
 import { procedure as getProcedure } from "./get";
@@ -8,10 +7,10 @@ import { procedure as removeProcedure } from "./remove";
 import { procedure as updateProcedure } from "./update";
 
 export const router = trpcRouter({
-  get: getProcedure,
-  getByAlias: getByAliasProcedure,
-  add: addProcedure,
-  remove: removeProcedure,
-  update: updateProcedure,
-  aliasAvailable: aliasAvailableProcedure,
+	get: getProcedure,
+	getByAlias: getByAliasProcedure,
+	add: addProcedure,
+	remove: removeProcedure,
+	update: updateProcedure,
+	aliasAvailable: aliasAvailableProcedure,
 });

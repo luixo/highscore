@@ -3,18 +3,18 @@ import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 
 export const Devtools = () => (
-  <TanStackDevtools
-    plugins={[
-      {
-        name: "TanStack Query",
-        render: <ReactQueryDevtoolsPanel />,
-        defaultOpen: true,
-      },
-      {
-        name: "TanStack Router",
-        render: <TanStackRouterDevtoolsPanel />,
-        defaultOpen: false,
-      },
-    ]}
-  />
+	<TanStackDevtools
+		plugins={[
+			{
+				name: "TanStack Query",
+				render: <ReactQueryDevtoolsPanel />,
+				defaultOpen: true,
+			},
+			{
+				name: "TanStack Router",
+				render: <TanStackRouterDevtoolsPanel />,
+				defaultOpen: false,
+			},
+		]}
+	/>
 );

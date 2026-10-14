@@ -1,9 +1,7 @@
 import React from "react";
-
 import type { Channel } from "pusher-js";
 import Pusher from "pusher-js";
 import type { SuperJSONResult } from "superjson";
-
 import type { SubscriptionMapping } from "~/utils/subscription";
 import { transformer } from "~/utils/transformer";
 
@@ -11,69 +9,69 @@ export const getChannelName = () => "highscore";
 
 let pusherInstance: Pusher | undefined;
 const getPusherInstance = (): Pusher => {
-  pusherInstance ??= new Pusher(import.meta.env.VITE_PUSHER_APP_KEY ?? "", {
-    cluster: import.meta.env.VITE_PUSHER_CLUSTER ?? "",
-    wsHost: import.meta.env.VITE_PUSHER_HOST,
-    forceTLS: true,
-    enabledTransports: ["ws", "wss"],
-  });
-  return pusherInstance;
+	pusherInstance ??= new Pusher(import.meta.env.VITE_PUSHER_APP_KEY ?? "", {
+		cluster: import.meta.env.VITE_PUSHER_CLUSTER ?? "",
+		wsHost: import.meta.env.VITE_PUSHER_HOST,
+		forceTLS: true,
+		enabledTransports: ["ws", "wss"],
+	});
+	return pusherInstance;
 };
 
 const channelSubscriptions: Record<
-  string,
-  { channel: Channel; subscribers: ((data: SuperJSONResult) => void)[] }
+	string,
+	{ channel: Channel; subscribers: ((data: SuperJSONResult) => void)[] }
 > = {};
 
 const useChannel = (channelName: string) => {
-  const [instance] = React.useState(() => getPusherInstance());
-  return React.useCallback(
-    (event: string, onData: (data: SuperJSONResult) => void) => {
-      if (!channelSubscriptions[channelName]) {
-        channelSubscriptions[channelName] = {
-          channel: instance.subscribe(channelName),
-          subscribers: [],
-        };
-      }
-      const channelObject = channelSubscriptions[channelName];
-      channelObject.subscribers.push(onData);
-      channelObject.channel.bind(event, onData);
-      return () => {
-        channelObject.channel.unbind(event, onData);
-        channelObject.subscribers = channelObject.subscribers.filter(
-          (fn) => fn !== onData,
-        );
-        if (channelObject.subscribers.length === 0) {
-          instance.unsubscribe(channelName);
-          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-          delete channelSubscriptions[channelName];
-        }
-      };
-    },
-    [channelName, instance],
-  );
+	const [instance] = React.useState(() => getPusherInstance());
+	return React.useCallback(
+		(event: string, onData: (data: SuperJSONResult) => void) => {
+			if (!channelSubscriptions[channelName]) {
+				channelSubscriptions[channelName] = {
+					channel: instance.subscribe(channelName),
+					subscribers: [],
+				};
+			}
+			const channelObject = channelSubscriptions[channelName];
+			channelObject.subscribers.push(onData);
+			channelObject.channel.bind(event, onData);
+			return () => {
+				channelObject.channel.unbind(event, onData);
+				channelObject.subscribers = channelObject.subscribers.filter(
+					(fn) => fn !== onData,
+				);
+				if (channelObject.subscribers.length === 0) {
+					instance.unsubscribe(channelName);
+					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+					delete channelSubscriptions[channelName];
+				}
+			};
+		},
+		[channelName, instance],
+	);
 };
 
 const timestamps: Partial<Record<keyof SubscriptionMapping, number>> = {};
 
 export const useBindSubscription = (channelName: string) => {
-  const subscribeChannel = useChannel(channelName);
-  return React.useCallback(
-    <K extends keyof SubscriptionMapping>(
-      event: K,
-      onData: (data: SubscriptionMapping[K]) => void,
-    ) =>
-      subscribeChannel(event, (data: SuperJSONResult) => {
-        const { timestamp, ...deserializedData } = transformer.deserialize(
-          data,
-        ) as SubscriptionMapping[K] & { timestamp: number };
-        const lastTimestamp = timestamps[event];
-        if (lastTimestamp && lastTimestamp > timestamp) {
-          return;
-        }
-        timestamps[event] = timestamp;
-        onData(deserializedData as unknown as SubscriptionMapping[K]);
-      }),
-    [subscribeChannel],
-  );
+	const subscribeChannel = useChannel(channelName);
+	return React.useCallback(
+		<K extends keyof SubscriptionMapping>(
+			event: K,
+			onData: (data: SubscriptionMapping[K]) => void,
+		) =>
+			subscribeChannel(event, (data: SuperJSONResult) => {
+				const { timestamp, ...deserializedData } = transformer.deserialize(
+					data,
+				) as SubscriptionMapping[K] & { timestamp: number };
+				const lastTimestamp = timestamps[event];
+				if (lastTimestamp && lastTimestamp > timestamp) {
+					return;
+				}
+				timestamps[event] = timestamp;
+				onData(deserializedData as unknown as SubscriptionMapping[K]);
+			}),
+		[subscribeChannel],
+	);
 };

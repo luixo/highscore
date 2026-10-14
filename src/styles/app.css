@@ -7,24 +7,24 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-inter: "Inter", sans-serif;
+	--font-inter: "Inter", sans-serif;
 
-  @keyframes fadeBackground {
-    0% {
-      background-color: oklch(0.7329 0.1935 150.81 / var(--bg-start));
-    }
-    100% {
-      background-color: oklch(0.7329 0.1935 150.81 / 0);
-    }
-  }
+	@keyframes fadeBackground {
+		0% {
+			background-color: oklch(0.7329 0.1935 150.81 / var(--bg-start));
+		}
+		100% {
+			background-color: oklch(0.7329 0.1935 150.81 / 0);
+		}
+	}
 }
 body {
-  @apply font-inter bg-background text-foreground;
+	@apply font-inter bg-background text-foreground;
 }
 
 /* https://stackoverflow.com/questions/2989263/disable-auto-zoom-in-input-text-tag-safari-on-iphone */
 @supports (-webkit-overflow-scrolling: touch) {
-  input {
-    font-size: 16px;
-  }
+	input {
+		font-size: 16px;
+	}
 }

@@ -1,2 +1,2 @@
 export const getUuid = () =>
-  typeof window === "undefined" ? "none" : window.crypto?.randomUUID?.();
+	typeof window === "undefined" ? "none" : window.crypto?.randomUUID?.();
