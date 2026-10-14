@@ -24,16 +24,14 @@ export const AllTabs: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 			<Tab key="scores" title={t("allTabs.scores")}>
 				<ScoreList eventId={event.id} />
 			</Tab>
-			{!moderatorStatus ? null : (
-				<Tab key="moderator" title={t("allTabs.moderation")}>
-					<AddScoreForm eventId={event.id} />
-				</Tab>
-			)}
-			{moderatorStatus !== "admin" ? null : (
+			<Tab key="moderator" title={t("allTabs.moderation")}>
+				<AddScoreForm eventId={event.id} />
+			</Tab>
+			{moderatorStatus === "admin" ? (
 				<Tab key="admin" title={t("allTabs.admin")}>
 					<AdminTabs event={event} />
 				</Tab>
-			)}
+			) : null}
 		</Tabs>
 	);
 };

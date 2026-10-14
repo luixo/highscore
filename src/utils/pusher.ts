@@ -7,13 +7,19 @@ import { transformer } from "~/utils/transformer";
 
 export const getChannelName = () => "highscore";
 
-let pusherInstance: Pusher | undefined;
+const {
+	VITE_PUSHER_APP_KEY = "",
+	VITE_PUSHER_CLUSTER = "",
+	VITE_PUSHER_HOST = "",
+} = import.meta.env;
+
+let pusherInstance: Pusher | undefined = undefined;
 const getPusherInstance = (): Pusher => {
-	pusherInstance ??= new Pusher(import.meta.env.VITE_PUSHER_APP_KEY ?? "", {
-		cluster: import.meta.env.VITE_PUSHER_CLUSTER ?? "",
-		wsHost: import.meta.env.VITE_PUSHER_HOST,
-		forceTLS: true,
+	pusherInstance ??= new Pusher(VITE_PUSHER_APP_KEY, {
+		cluster: VITE_PUSHER_CLUSTER,
 		enabledTransports: ["ws", "wss"],
+		forceTLS: true,
+		wsHost: VITE_PUSHER_HOST,
 	});
 	return pusherInstance;
 };
@@ -24,7 +30,7 @@ const channelSubscriptions: Record<
 > = {};
 
 const useChannel = (channelName: string) => {
-	const [instance] = React.useState(() => getPusherInstance());
+	const instance = React.useMemo(() => getPusherInstance(), []);
 	return React.useCallback(
 		(event: string, onData: (data: SuperJSONResult) => void) => {
 			if (!channelSubscriptions[channelName]) {
@@ -43,7 +49,6 @@ const useChannel = (channelName: string) => {
 				);
 				if (channelObject.subscribers.length === 0) {
 					instance.unsubscribe(channelName);
-					// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 					delete channelSubscriptions[channelName];
 				}
 			};

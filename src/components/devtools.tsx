@@ -6,14 +6,14 @@ export const Devtools = () => (
 	<TanStackDevtools
 		plugins={[
 			{
+				defaultOpen: true,
 				name: "TanStack Query",
 				render: <ReactQueryDevtoolsPanel />,
-				defaultOpen: true,
 			},
 			{
+				defaultOpen: false,
 				name: "TanStack Router",
 				render: <TanStackRouterDevtoolsPanel />,
-				defaultOpen: false,
 			},
 		]}
 	/>

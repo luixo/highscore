@@ -13,9 +13,10 @@ export const DefaultCatchBoundary: React.FC<ErrorComponentProps> = ({
 }) => {
 	const router = useRouter();
 	const isRoot = useMatch({
-		strict: false,
 		select: (state) => state.id === rootRouteId,
+		strict: false,
 	});
+	// oxlint-disable-next-line no-console
 	console.error("Error component:", error);
 
 	return (
@@ -23,8 +24,8 @@ export const DefaultCatchBoundary: React.FC<ErrorComponentProps> = ({
 			<ErrorComponent error={error} />
 			<div className="flex flex-wrap items-center gap-2">
 				<Button
-					onClick={() => {
-						router.invalidate();
+					onPress={() => {
+						void router.invalidate();
 					}}
 				>
 					Try Again

@@ -10,7 +10,8 @@ export const useSubscription = <K extends keyof SubscriptionMapping>(
 ) => {
 	const subscribe = useBindSubscription(getChannelName());
 	React.useEffect(() => {
-		if (subscribed[event]) {
+		if (subscribed[event] === true) {
+			// oxlint-disable-next-line no-console
 			console.warn(`There is a double subscription to an event "${event}"`);
 		}
 		subscribed[event] = true;

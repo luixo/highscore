@@ -5,8 +5,8 @@ import { eventAliasSchema, eventIdSchema } from "~/server/schemas";
 
 const visitedEventSchema = z.object({
 	event: z.object({
-		id: eventIdSchema,
 		alias: eventAliasSchema.optional(),
+		id: eventIdSchema,
 	}),
 	lastVisited: z.number(),
 });
@@ -26,7 +26,7 @@ export const useVisitedEvents = () => {
 		removeEvent: useCallback(
 			(id: string) => {
 				setEvents((prevEvents) =>
-					(prevEvents ?? []).filter(({ event }) => event.id !== id),
+					prevEvents.filter(({ event }) => event.id !== id),
 				);
 			},
 			[setEvents],
@@ -39,7 +39,7 @@ export const useVisitedEvents = () => {
 						lastVisited: Date.now(),
 					};
 					const eventIndex = prevEvents.findIndex(
-						({ event }) => event.id === nextEntity.event.id,
+						({ event: { id } }) => id === nextEntity.event.id,
 					);
 					if (eventIndex !== -1) {
 						return [

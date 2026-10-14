@@ -9,6 +9,23 @@ import {
 } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
 
+const getUpdateObject = (updateObject: z.infer<typeof scoreUpdateObject>) => {
+	switch (updateObject.type) {
+		case "playerName": {
+			return {
+				playerName: updateObject.playerName,
+			};
+		}
+		case "scores": {
+			return {
+				values: {
+					values: updateObject.scores,
+				},
+			};
+		}
+	}
+};
+
 export const procedure = adminProcedure
 	.input(
 		z.object({
@@ -21,31 +38,19 @@ export const procedure = adminProcedure
 		const db = getDatabase();
 		const score = await db
 			.updateTable("scores")
-			.where(({ and }) =>
-				and({
+			.where((eb) =>
+				eb.and({
 					gameId,
 					playerName,
 				}),
 			)
-			.set(
-				updateObject.type === "playerName"
-					? {
-							playerName: updateObject.playerName,
-						}
-					: updateObject.type === "scores"
-						? {
-								values: {
-									values: updateObject.scores,
-								},
-							}
-						: {},
-			)
+			.set(getUpdateObject(updateObject))
 			.returning(["scores.updatedAt", "scores.values", "scores.createdAt"])
 			.executeTakeFirstOrThrow();
 		const nextScore = {
 			...score,
-			values: getScores(score.values).values,
 			moderatorName: ctx.session.name,
+			values: getScores(score.values).values,
 		};
 		await pushEvent("score:upsert", {
 			gameId,

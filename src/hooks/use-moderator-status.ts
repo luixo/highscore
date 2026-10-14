@@ -17,7 +17,7 @@ export const useModeratorStatus = ({
 	const selfModeratorQuery = useQuery(
 		trpc.moderator.get.queryOptions({ eventId }),
 	);
-	if (!moderatorKey) {
+	if (moderatorKey === undefined) {
 		return null;
 	}
 	if (selfModeratorQuery.status === "pending") {

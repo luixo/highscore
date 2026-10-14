@@ -12,10 +12,10 @@ import {
 export const procedure = publicProcedure
 	.input(
 		z.object({
-			title: eventNameSchema,
-			alias: eventAliasSchema.optional(),
-			adminName: moderatorNameSchema,
 			adminKey: moderatorKeySchema,
+			adminName: moderatorNameSchema,
+			alias: eventAliasSchema.optional(),
+			title: eventNameSchema,
 		}),
 	)
 	.mutation(async ({ input: { title, alias, adminKey, adminName } }) => {
@@ -23,15 +23,15 @@ export const procedure = publicProcedure
 		const id = v4();
 		const result = await db
 			.insertInto("events")
-			.values({ id, title, alias })
+			.values({ alias, id, title })
 			.returning(["id", "title", "alias"])
 			.executeTakeFirstOrThrow();
 		await db
 			.insertInto("moderators")
 			.values({
 				eventId: result.id,
-				name: adminName,
 				key: adminKey,
+				name: adminName,
 				role: "admin",
 			})
 			.executeTakeFirst();

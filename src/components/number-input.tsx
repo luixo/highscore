@@ -1,6 +1,7 @@
 import type React from "react";
 import { NumberInput as NumberInputRaw } from "@heroui/number-input";
-import { type FieldError, getErrorState } from "~/utils/form";
+import { getErrorState } from "~/utils/form";
+import type { FieldError } from "~/utils/form";
 
 type Props = React.ComponentProps<typeof NumberInputRaw> & {
 	fieldError?: FieldError;

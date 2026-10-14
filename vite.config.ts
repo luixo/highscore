@@ -8,9 +8,6 @@ import chromeDevtools from "vite-plugin-devtools-json";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-	server: {
-		port: 3000,
-	},
 	plugins: [
 		tsconfigPaths(),
 		devtools(),
@@ -24,4 +21,7 @@ export default defineConfig({
 		tailwindcss(),
 		nitro(),
 	],
+	server: {
+		port: 3000,
+	},
 });

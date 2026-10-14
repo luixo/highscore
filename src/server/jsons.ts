@@ -22,14 +22,14 @@ const getParser =
 	};
 
 export const getAggregation = getParser(aggregationSchema, {
-	type: "value",
-	key: "value",
 	defaultValue: 0,
+	key: "value",
+	type: "value",
 });
 export const getFormatting = getParser(formattingSchema, {
-	type: "regex",
 	precision: 4,
 	regex: "%value%",
+	type: "regex",
 });
 export const getInputs = getParser(inputsSchema, { values: [] });
 export const getScores = getParser(scoresSchema, { values: [] });

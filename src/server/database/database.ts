@@ -1,17 +1,10 @@
 import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import type { DB } from "~/server/database/database.gen";
-
-const getConnectionString = () => {
-	const connString = process.env.DATABASE_URL;
-	if (!connString) {
-		throw new Error(`Expected to have DATABASE_URL in environment`);
-	}
-	return connString;
-};
+import { env } from "~/server/env";
 
 export const getDatabase = () => {
-	const pool = new Pool({ connectionString: getConnectionString() });
+	const pool = new Pool({ connectionString: env.DATABASE_URL });
 	return new Kysely<DB>({
 		dialect: new PostgresDialect({ pool }),
 	});

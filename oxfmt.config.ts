@@ -1,7 +1,14 @@
 import { getFormatConfig } from "@luixo/configs";
 
 export default getFormatConfig({
+	ignorePatterns: [".output", "*.gen.ts"],
 	imports: {
+		customGroups: [
+			{
+				elementNamePattern: ["react", "react-dom/client"],
+				groupName: "react",
+			},
+		],
 		groups: [
 			"react",
 			["builtin", "external"],
@@ -11,12 +18,5 @@ export default getFormatConfig({
 			"index",
 			"unknown",
 		],
-		customGroups: [
-			{
-				groupName: "react",
-				elementNamePattern: ["react", "react-dom/client"],
-			},
-		],
 	},
-	ignorePatterns: [".output", "*.gen.ts"],
 });

@@ -10,9 +10,9 @@ import {
 export const procedure = publicProcedure
 	.input(
 		z.object({
+			alias: eventAliasSchema.optional(),
 			id: eventIdSchema,
 			title: eventNameSchema,
-			alias: eventAliasSchema.optional(),
 		}),
 	)
 	.mutation(async ({ input: { id, title, alias } }) => {
@@ -20,7 +20,7 @@ export const procedure = publicProcedure
 		const result = await db
 			.updateTable("events")
 			.where("id", "=", id)
-			.set({ title, alias })
+			.set({ alias, title })
 			.returning(["title", "alias"])
 			.executeTakeFirstOrThrow();
 		return result;

@@ -4,7 +4,8 @@ import {
 } from "@trpc/client";
 import type { FetchHandlerRequestOptions } from "@trpc/server/adapters/fetch";
 import { getRequestInfo } from "@trpc/server/unstable-core-do-not-import";
-import { type AppRouter, appRouter } from "~/server/routers/_app";
+import { appRouter } from "~/server/routers/_app";
+import type { AppRouter } from "~/server/routers/_app";
 import { transformer } from "~/utils/transformer";
 
 export const onError: NonNullable<
@@ -19,6 +20,7 @@ export const onError: NonNullable<
 		// Do not log an attempt to fetch the account without a cookie
 		return;
 	}
+	// oxlint-disable-next-line no-console
 	console.error(
 		`[${error.code}] [${
 			ctx.req.headers.get("user-agent") ?? "no-user-agent"
@@ -36,25 +38,25 @@ export const getLocalTrpcClient = ({
 	createTRPCClient<typeof appRouter>({
 		links: [
 			localLink({
-				router: appRouter,
 				createContext: async () => {
 					const url = new URL("/api/trpc", "http://localhost");
 					const info = await getRequestInfo({
-						req,
-						url,
+						headers: req.headers,
 						path: url.pathname.slice(1),
+						req,
 						router: appRouter,
 						searchParams: url.searchParams,
-						headers: req.headers,
+						url,
 					});
 					return {
+						info,
 						req,
 						resHeaders,
-						info,
 					};
 				},
-				transformer,
 				onError: (opts) => onError({ req, ...opts }),
+				router: appRouter,
+				transformer,
 			}),
 		],
 	});

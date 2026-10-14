@@ -14,12 +14,12 @@ export const UploadImage: React.FC<{
 			onSuccess: ({ url }) => onUpload(url),
 		}),
 	);
-	const inputClickRef = React.useRef<() => void>(doNothing);
+	const inputClickRef = React.useRef<() => void>(doNothing());
 	const onInputButtonClick = React.useEffectEvent(() => {
 		inputClickRef.current();
 	});
 	const onSubmit = React.useCallback(
-		async (file: File) => {
+		(file: File) => {
 			const formData = new FormData();
 			formData.append("image", file);
 			uploadImageMutation.mutate(formData);
@@ -28,10 +28,10 @@ export const UploadImage: React.FC<{
 	);
 	return (
 		<>
-			<FileInput
-				onFileUpdate={async (file) => onSubmit(file)}
-				onClickRef={inputClickRef}
-			/>
+			<FileInput onFileUpdate={onSubmit} onClickRef={inputClickRef} />
+			{/* This render prop passes the handler to a button; it does not invoke it during render. */}
+			{/* oxlint-disable-next-line react/rule-suppression */}
+			{/* oxlint-disable-next-line react-hooks/rules-of-hooks */}
 			{children({ onPress: onInputButtonClick })}
 		</>
 	);

@@ -36,9 +36,9 @@ export const procedure = publicProcedure
 			.execute();
 		return games.map((game) => ({
 			...game,
-			sort: getSort(game.sort),
-			inputs: getInputs(game.inputs),
-			formatting: getFormatting(game.formatting),
 			aggregation: getAggregation(game.aggregation),
+			formatting: getFormatting(game.formatting),
+			inputs: getInputs(game.inputs),
+			sort: getSort(game.sort),
 		}));
 	});

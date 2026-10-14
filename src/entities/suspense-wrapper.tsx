@@ -30,6 +30,7 @@ export const SuspenseWrapper: React.FC<
 		<QueryErrorResetBoundary>
 			<CatchBoundary
 				getResetKey={() => "static"}
+				// oxlint-disable-next-line no-console
 				onCatch={console.error}
 				errorComponent={ExternalErrorComponent || ErrorComponent}
 			>
@@ -43,7 +44,7 @@ export const suspendedFallback =
 	<P extends object = Record<string, never>>(
 		Component: React.ComponentType<P>,
 		Fallback: React.ReactNode | React.FC<P>,
-		ErrorComponent?: React.FC<P & ErrorComponentProps>,
+		CustomErrorComponent?: React.FC<P & ErrorComponentProps>,
 	): React.FC<P> =>
 	(props) => (
 		<SuspenseWrapper
@@ -51,8 +52,8 @@ export const suspendedFallback =
 				typeof Fallback === "function" ? <Fallback {...props} /> : Fallback
 			}
 			ErrorComponent={
-				ErrorComponent
-					? (errorProps) => <ErrorComponent {...props} {...errorProps} />
+				CustomErrorComponent
+					? (errorProps) => <CustomErrorComponent {...props} {...errorProps} />
 					: undefined
 			}
 		>

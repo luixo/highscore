@@ -21,14 +21,14 @@ export const procedure = adminProcedure
 			const gameRaw = await db
 				.insertInto("games")
 				.values({
-					id,
-					eventId,
-					title,
-					logoUrl,
-					inputs,
 					aggregation,
+					eventId,
 					formatting,
+					id,
+					inputs,
+					logoUrl,
 					sort,
+					title,
 				})
 				.returning([
 					"eventId",
@@ -45,10 +45,10 @@ export const procedure = adminProcedure
 				.executeTakeFirstOrThrow();
 			const game = {
 				...gameRaw,
-				sort: getSort(gameRaw.sort),
-				inputs: getInputs(gameRaw.inputs),
-				formatting: getFormatting(gameRaw.formatting),
 				aggregation: getAggregation(gameRaw.aggregation),
+				formatting: getFormatting(gameRaw.formatting),
+				inputs: getInputs(gameRaw.inputs),
+				sort: getSort(gameRaw.sort),
 			};
 			await pushEvent("game:added", { game });
 			return game;

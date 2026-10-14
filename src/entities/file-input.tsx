@@ -16,9 +16,9 @@ export const FileInput: React.FC<Props> = ({ onClickRef, onFileUpdate }) => {
 	const onChange = React.useCallback<
 		React.ChangeEventHandler<HTMLInputElement>
 	>(
-		async (event) => {
-			if (event.target.files && event.target.files.length > 0) {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		(event) => {
+			if (event.target.files && event.target.files.length !== 0) {
+				// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 				const file = event.target.files[0]!;
 				onFileUpdate?.(file);
 			}

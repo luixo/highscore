@@ -13,8 +13,8 @@ import type { RouterOutput } from "~/utils/query";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = z.strictObject({
-	title: eventNameSchema,
 	alias: eventAliasSchema.optional(),
+	title: eventNameSchema,
 });
 
 export const ChangeEvent: React.FC<{
@@ -29,29 +29,30 @@ export const ChangeEvent: React.FC<{
 	);
 	const getDefaultValues = React.useCallback(
 		(): z.infer<typeof formSchema> => ({
-			title: event.title,
 			alias: event.alias,
+			title: event.title,
 		}),
 		[event.alias, event.title],
 	);
 	const form = useAppForm({
 		defaultValues: getDefaultValues(),
-		validators: {
-			onChangeAsync: formSchema,
-		},
 		onSubmit: ({ value }) => {
+			// oxlint-disable-next-line no-use-before-define
 			updateEventMutation.mutate({
+				alias: value.alias ?? undefined,
 				id: event.id,
 				title: value.title,
-				alias: value.alias || undefined,
 			});
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
-				title: t("common.error"),
-				description: getAllErrors(formApi),
 				color: "danger",
+				description: getAllErrors(formApi),
+				title: t("common.error"),
 			});
+		},
+		validators: {
+			onChangeAsync: formSchema,
 		},
 	});
 	const queryClient = useQueryClient();
@@ -66,8 +67,8 @@ export const ChangeEvent: React.FC<{
 						}
 						return {
 							...prevData,
-							title: variables.title,
 							alias: variables.alias,
+							title: variables.title,
 						};
 					},
 				);
@@ -75,20 +76,20 @@ export const ChangeEvent: React.FC<{
 					return variables.alias;
 				}
 			},
-			onSuccess: (result, _variables, onMutateResult) => {
+			onSuccess: async (result, _variables, onMutateResult) => {
 				addToast({
-					title: t("common.success"),
+					color: "success",
 					description: t("updateEvent.form.submitButton", {
 						title: result.title,
 					}),
-					color: "success",
+					title: t("common.success"),
 				});
 				form.reset(getDefaultValues());
-				if (onMutateResult) {
-					router.navigate({
-						to: "/events/$id",
+				if (onMutateResult !== undefined) {
+					await router.navigate({
 						params: { id: onMutateResult },
 						replace: true,
+						to: "/events/$id",
 					});
 				}
 			},
@@ -99,7 +100,7 @@ export const ChangeEvent: React.FC<{
 			<form.Form
 				onSubmit={(e) => {
 					e.preventDefault();
-					form.handleSubmit();
+					void form.handleSubmit();
 				}}
 			>
 				<form.AppField name="title">
@@ -123,7 +124,7 @@ export const ChangeEvent: React.FC<{
 					asyncDebounceMs={500}
 					validators={{
 						onChangeAsync: async ({ value, fieldApi }) => {
-							if (!fieldApi.getMeta().isValid || !value) {
+							if (!fieldApi.getMeta().isValid || value === undefined) {
 								return undefined;
 							}
 							const result = await verifyAliasMutation.mutateAsync({

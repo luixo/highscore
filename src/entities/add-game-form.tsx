@@ -1,5 +1,4 @@
 import React from "react";
-import type { Form as FormType } from "@heroui/react";
 import {
 	Button,
 	ButtonGroup,
@@ -9,12 +8,14 @@ import {
 	SelectItem,
 	addToast,
 } from "@heroui/react";
-import { type DeepKeysOfType, useStore } from "@tanstack/react-form";
+import { useSelector } from "@tanstack/react-form";
+import type { DeepKeysOfType } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { CiCircleRemove } from "react-icons/ci";
 import type { z } from "zod";
 import { UploadImage } from "~/entities/upload-image";
-import { type AppForm, useAppForm, withFieldGroup } from "~/hooks/use-app-form";
+import { useAppForm, withFieldGroup } from "~/hooks/use-app-form";
+import type { AppForm } from "~/hooks/use-app-form";
 import type {
 	EventId,
 	aggregationSchema,
@@ -33,7 +34,10 @@ type FormType = z.infer<typeof formSchema>;
 
 const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 	const { t, language } = useTranslation();
-	const inputs = useStore(form.store, (state) => state.values.inputs.values);
+	const inputsValues = useSelector(
+		form.store,
+		(state) => state.values.inputs.values,
+	);
 	const mockForm = useAppForm({
 		defaultValues: {
 			inputs: [] as number[],
@@ -41,9 +45,9 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 	});
 	React.useEffect(() => {
 		mockForm.setFieldValue("inputs", (values) =>
-			inputs.map((input, index) => values[index] ?? input.defaultValue),
+			inputsValues.map((input, index) => values[index] ?? input.defaultValue),
 		);
-	}, [inputs, mockForm]);
+	}, [inputsValues, mockForm]);
 	return (
 		<>
 			<h4 className="text-xl font-semibold">
@@ -54,33 +58,32 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 					<Select
 						label={t("addGame.form.formatting.label")}
 						placeholder={t("addGame.form.formatting.placeholder")}
-						selectedKeys={field.state.value ? [field.state.value.type] : []}
+						selectedKeys={[field.state.value.type]}
 						variant="bordered"
 						onSelectionChange={(selection) => {
 							if (selection === "all") {
 								return;
+							}
+							const selected = [...selection.keys()][0] as
+								| (typeof field)["state"]["value"]["type"]
+								| undefined;
+							if (!selected) {
+								field.setValue({
+									precision: DEFAULT_PRECISION,
+									regex: "%value%",
+									type: "regex",
+								} satisfies FormType["formatting"]);
+							} else if (selected === "time") {
+								field.setValue({
+									precision: DEFAULT_PRECISION,
+									type: "time",
+								} satisfies FormType["formatting"]);
 							} else {
-								const selected = [...selection.keys()][0] as
-									| (typeof field)["state"]["value"]["type"]
-									| undefined;
-								if (!selected) {
-									field.setValue({
-										type: "regex",
-										regex: "%value%",
-										precision: DEFAULT_PRECISION,
-									} satisfies FormType["formatting"]);
-								} else if (selected === "time") {
-									field.setValue({
-										type: "time",
-										precision: DEFAULT_PRECISION,
-									} satisfies FormType["formatting"]);
-								} else if (selected === "regex") {
-									field.setValue({
-										type: "regex",
-										regex: "%value%",
-										precision: DEFAULT_PRECISION,
-									} satisfies FormType["formatting"]);
-								}
+								field.setValue({
+									precision: DEFAULT_PRECISION,
+									regex: "%value%",
+									type: "regex",
+								} satisfies FormType["formatting"]);
 							}
 						}}
 					>
@@ -103,9 +106,9 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 							value={field.state.value.regex}
 							onValueChange={(value) =>
 								field.setValue((prevValue) => ({
-									type: "regex",
 									precision: prevValue.precision,
 									regex: value,
+									type: "regex",
 								}))
 							}
 							name={field.name}
@@ -137,6 +140,7 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 				{(field) => (
 					<div className="flex flex-wrap gap-2">
 						{field.state.value.map((_, index) => (
+							// oxlint-disable-next-line react/no-array-index-key
 							<mockForm.Field key={index} name={`inputs[${index}]`}>
 								{(subField) => (
 									<field.NumberField
@@ -168,8 +172,8 @@ const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 								: DEFAULT_PRECISION;
 							const aggregatedScore = aggregateScore(
 								mockInputs.map((input, index) => ({
-									type: "number",
 									key: inputs.values[index]?.key ?? "unknown",
+									type: "number",
 									value: input,
 								})),
 								aggregation,
@@ -197,10 +201,10 @@ const InputButtonGroup: React.FC<{
 			color="primary"
 			onPress={() =>
 				onClick({
-					type: "number",
-					key: getUuid(),
-					description: "",
 					defaultValue: 0,
+					description: "",
+					key: getUuid(),
+					type: "number",
 				})
 			}
 		>
@@ -226,101 +230,97 @@ const InputsForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 										key={fieldValue.key}
 										className="flex w-full flex-col gap-2"
 									>
-										<>
-											<div className="flex w-full items-center justify-between gap-2">
-												<h5>
-													{t("addGame.form.inputs.field.title", { index })}
-												</h5>
-												<div className="flex gap-2">
-													<InputButtonGroup onClick={subField.setValue} />
-													<Button
-														color="danger"
-														isIconOnly
-														size="sm"
-														onPress={() => field.removeValue(index)}
-													>
-														<CiCircleRemove />
-													</Button>
-												</div>
+										<div className="flex w-full items-center justify-between gap-2">
+											<h5>{t("addGame.form.inputs.field.title", { index })}</h5>
+											<div className="flex gap-2">
+												<InputButtonGroup onClick={subField.setValue} />
+												<Button
+													color="danger"
+													isIconOnly
+													size="sm"
+													onPress={() => field.removeValue(index)}
+												>
+													<CiCircleRemove />
+												</Button>
 											</div>
-											<form.Field name={`inputs.values[${index}].description`}>
-												{(localField) => (
-													<field.TextField
-														isRequired
-														label={t(
-															"addGame.form.inputs.field.description.label",
-														)}
-														placeholder={t(
-															"addGame.form.inputs.field.description.placeholder",
-														)}
-														value={localField.state.value}
-														onValueChange={localField.setValue}
-														name={field.name}
-														onBlur={field.handleBlur}
-														fieldError={
-															field.state.meta.isDirty
-																? field.state.meta.errors
-																: undefined
-														}
-													/>
-												)}
-											</form.Field>
-											<form.Field name={`inputs.values[${index}].key`}>
-												{(localField) => (
-													<field.TextField
-														isRequired
-														label={t("addGame.form.inputs.field.key.label")}
-														placeholder={t(
-															"addGame.form.inputs.field.key.placeholder",
-														)}
-														value={localField.state.value}
-														onValueChange={localField.setValue}
-														name={field.name}
-														onBlur={field.handleBlur}
-														fieldError={
-															field.state.meta.isDirty
-																? field.state.meta.errors
-																: undefined
-														}
-													/>
-												)}
-											</form.Field>
-											<form.Field name={`inputs.values[${index}].defaultValue`}>
-												{(localField) => (
-													<field.NumberField
-														isRequired
-														label={t("addGame.form.inputs.field.type.number")}
-														placeholder="0"
-														value={localField.state.value}
-														onValueChange={localField.setValue}
-														name={field.name}
-														onBlur={field.handleBlur}
-														fieldError={
-															field.state.meta.isDirty
-																? field.state.meta.errors
-																: undefined
-														}
-													/>
-												)}
-											</form.Field>
-											<form.Field name={`inputs.values[${index}].hidden`}>
-												{(localField) => (
-													<field.SwitchField
-														isSelected={localField.state.value ?? false}
-														onValueChange={localField.setValue}
-														name={field.name}
-														onBlur={field.handleBlur}
-														fieldError={
-															field.state.meta.isDirty
-																? field.state.meta.errors
-																: undefined
-														}
-													>
-														{t("addGame.form.inputs.field.hidden.label")}
-													</field.SwitchField>
-												)}
-											</form.Field>
-										</>
+										</div>
+										<form.Field name={`inputs.values[${index}].description`}>
+											{(localField) => (
+												<field.TextField
+													isRequired
+													label={t(
+														"addGame.form.inputs.field.description.label",
+													)}
+													placeholder={t(
+														"addGame.form.inputs.field.description.placeholder",
+													)}
+													value={localField.state.value}
+													onValueChange={localField.setValue}
+													name={field.name}
+													onBlur={field.handleBlur}
+													fieldError={
+														field.state.meta.isDirty
+															? field.state.meta.errors
+															: undefined
+													}
+												/>
+											)}
+										</form.Field>
+										<form.Field name={`inputs.values[${index}].key`}>
+											{(localField) => (
+												<field.TextField
+													isRequired
+													label={t("addGame.form.inputs.field.key.label")}
+													placeholder={t(
+														"addGame.form.inputs.field.key.placeholder",
+													)}
+													value={localField.state.value}
+													onValueChange={localField.setValue}
+													name={field.name}
+													onBlur={field.handleBlur}
+													fieldError={
+														field.state.meta.isDirty
+															? field.state.meta.errors
+															: undefined
+													}
+												/>
+											)}
+										</form.Field>
+										<form.Field name={`inputs.values[${index}].defaultValue`}>
+											{(localField) => (
+												<field.NumberField
+													isRequired
+													label={t("addGame.form.inputs.field.type.number")}
+													placeholder="0"
+													value={localField.state.value}
+													onValueChange={localField.setValue}
+													name={field.name}
+													onBlur={field.handleBlur}
+													fieldError={
+														field.state.meta.isDirty
+															? field.state.meta.errors
+															: undefined
+													}
+												/>
+											)}
+										</form.Field>
+										<form.Field name={`inputs.values[${index}].hidden`}>
+											{(localField) => (
+												<field.SwitchField
+													isSelected={localField.state.value ?? false}
+													onValueChange={localField.setValue}
+													name={field.name}
+													onBlur={field.handleBlur}
+													fieldError={
+														field.state.meta.isDirty
+															? field.state.meta.errors
+															: undefined
+													}
+												>
+													{t("addGame.form.inputs.field.hidden.label")}
+												</field.SwitchField>
+											)}
+										</form.Field>
 									</div>
 								)}
 							</form.Field>
@@ -328,10 +328,10 @@ const InputsForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 						<InputButtonGroup
 							onClick={() =>
 								field.pushValue({
-									type: "number",
+									defaultValue: 0,
 									description: "",
 									key: getUuid(),
-									defaultValue: 0,
+									type: "number",
 								})
 							}
 						/>
@@ -360,10 +360,9 @@ const SortForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
 						onSelectionChange={(selection) => {
 							if (selection === "all") {
 								return;
-							} else {
-								const selected = [...selection.keys()][0] as "asc" | "desc";
-								field.setValue(selected);
 							}
+							const selected = [...selection.keys()][0] as "asc" | "desc";
+							field.setValue(selected);
 						}}
 					>
 						<SelectItem key="asc">
@@ -383,21 +382,23 @@ const collectKeys = (
 	aggregation: z.infer<typeof aggregationSchema>,
 ): string[] => {
 	switch (aggregation.type) {
-		case "value":
+		case "value": {
 			return [aggregation.key];
+		}
 		case "sum":
 		case "difference":
 		case "division":
-		case "multiply":
+		case "multiply": {
 			return aggregation.values.reduce<string[]>(
 				(acc, value) => [...acc, ...collectKeys(value)],
 				[],
 			);
+		}
 	}
 };
 
 const useKeys = (form: AppForm<FormType>) =>
-	useStore(form.store, (state) => {
+	useSelector(form.store, (state) => {
 		const allKeys = [
 			...state.values.inputs.values.map((input) => input.key),
 			...collectKeys(state.values.aggregation),
@@ -427,10 +428,9 @@ const AggregationValueForm: React.FC<{
 						onSelectionChange={(selection) => {
 							if (selection === "all") {
 								return;
-							} else {
-								const selected = [...selection.keys()][0] as string;
-								field.setValue(selected);
 							}
+							const selected = [...selection.keys()][0] as string;
+							field.setValue(selected);
 						}}
 					>
 						{inputKeys.map((key) => (
@@ -485,9 +485,9 @@ const AggregationButtonGroup: React.FC<{
 }> = ({ form, onClick, color }) => {
 	const firstKey = useKeys(form)[0] ?? "unknown";
 	const defaultValue = {
-		type: "value" as const,
-		key: firstKey,
 		defaultValue: 0,
+		key: firstKey,
+		type: "value" as const,
 		weight: 1,
 	};
 	return (
@@ -556,16 +556,23 @@ const SwitchAggregationForm: React.FC<{
 	aggregation: z.infer<typeof aggregationSchema>;
 }> = ({ form, path, aggregation }) => {
 	switch (aggregation.type) {
-		case "value":
+		/* oxlint-disable no-use-before-define */
+		case "value": {
 			return <AggregationValueForm form={form} path={path} />;
-		case "sum":
+		}
+		case "sum": {
 			return <AggregationSumForm form={form} path={path} />;
-		case "difference":
+		}
+		case "difference": {
 			return <AggregationDifferenceForm form={form} path={path} />;
-		case "division":
+		}
+		case "division": {
 			return <AggregationDivisionForm form={form} path={path} />;
-		case "multiply":
+		}
+		case "multiply": {
 			return <AggregationMultiplyForm form={form} path={path} />;
+		}
+		/* oxlint-enable no-use-before-define */
 	}
 };
 
@@ -606,6 +613,8 @@ const AggregationElement: React.FC<{
 };
 
 const MultipleAggregationForm = withFieldGroup({
+	// Keep the full union so the group can bind to every aggregation variant.
+	// oxlint-disable-next-line typescript/no-unnecessary-type-assertion
 	defaultValues: {
 		type: "multiply",
 		values: [],
@@ -628,6 +637,7 @@ const MultipleAggregationForm = withFieldGroup({
 									`${path}.values[${index}]` as `aggregation.values[${number}]`;
 								return (
 									<AggregationElement
+										// oxlint-disable-next-line react/no-array-index-key
 										key={index}
 										form={form}
 										value={fieldValue}
@@ -640,7 +650,7 @@ const MultipleAggregationForm = withFieldGroup({
 											field.state.value.length === 1
 												? undefined
 												: () => {
-														group.removeFieldValue("values", index);
+														void group.removeFieldValue("values", index);
 													}
 										}
 										path={localPath}
@@ -770,55 +780,56 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 	const { t } = useTranslation();
 	const getDefaultValues = React.useCallback(
 		(): z.infer<typeof formSchema> => ({
-			title: "",
-			sort: { direction: "asc" },
-			logoUrl: undefined,
+			aggregation: {
+				defaultValue: 0,
+				key: "default",
+				type: "value",
+			},
 			formatting: {
-				type: "regex",
-				regex: "%value%",
 				precision: DEFAULT_PRECISION,
+				regex: "%value%",
+				type: "regex",
 			},
 			inputs: {
 				values: [
 					{
-						type: "number",
-						key: "default",
 						defaultValue: 0,
 						description: t("addGame.form.inputs.defaultDescription"),
+						key: "default",
+						type: "number",
 					},
 				],
 			},
-			aggregation: {
-				type: "value",
-				key: "default",
-				defaultValue: 0,
-			},
+			logoUrl: undefined,
+			sort: { direction: "asc" },
+			title: "",
 		}),
 		[t],
 	);
 	const form = useAppForm({
 		defaultValues: getDefaultValues(),
-		validators: {
-			onChange: formSchema,
-		},
 		onSubmit: ({ value }) => {
-			addGameMutation.mutate({ eventId: eventId, ...value });
+			// oxlint-disable-next-line no-use-before-define
+			addGameMutation.mutate({ eventId, ...value });
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
-				title: t("common.error"),
-				description: getAllErrors(formApi),
 				color: "danger",
+				description: getAllErrors(formApi),
+				title: t("common.error"),
 			});
+		},
+		validators: {
+			onChange: formSchema,
 		},
 	});
 	const addGameMutation = useMutation(
 		trpc.games.add.mutationOptions({
 			onSuccess: (result) => {
 				addToast({
-					title: t("common.success"),
-					description: t("addGame.toast.description", { title: result.title }),
 					color: "success",
+					description: t("addGame.toast.description", { title: result.title }),
+					title: t("common.success"),
 				});
 				form.reset(getDefaultValues());
 			},
@@ -830,7 +841,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				className="flex flex-col gap-4"
 				onSubmit={(e) => {
 					e.preventDefault();
-					form.handleSubmit();
+					void form.handleSubmit();
 				}}
 			>
 				<h3 className="text-2xl font-semibold">{t("addGame.title")}</h3>
@@ -851,7 +862,19 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				</form.AppField>
 				<form.AppField name="logoUrl">
 					{(field) =>
-						field.state.value ? (
+						field.state.value === undefined ? (
+							<UploadImage onUpload={(url) => field.setValue(url)}>
+								{({ onPress }) => (
+									<Button
+										onPress={onPress}
+										color="secondary"
+										className="w-full"
+									>
+										{t("addGame.form.logoUrl.uploadButton")}
+									</Button>
+								)}
+							</UploadImage>
+						) : (
 							<field.TextField
 								label={t("addGame.form.logoUrl.label")}
 								value={field.state.value}
@@ -867,18 +890,6 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 									/>
 								}
 							/>
-						) : (
-							<UploadImage onUpload={(url) => field.setValue(url)}>
-								{({ onPress }) => (
-									<Button
-										onPress={onPress}
-										color="secondary"
-										className="w-full"
-									>
-										{t("addGame.form.logoUrl.uploadButton")}
-									</Button>
-								)}
-							</UploadImage>
 						)
 					}
 				</form.AppField>

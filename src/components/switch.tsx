@@ -1,6 +1,7 @@
 import type React from "react";
 import { Switch as SwitchRaw } from "@heroui/switch";
-import { type FieldError, getErrorState } from "~/utils/form";
+import { getErrorState } from "~/utils/form";
+import type { FieldError } from "~/utils/form";
 
 type Props = React.ComponentProps<typeof SwitchRaw> & {
 	fieldError?: FieldError;

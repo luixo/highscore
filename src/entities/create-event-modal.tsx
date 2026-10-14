@@ -27,16 +27,16 @@ import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = z.strictObject({
-	title: eventNameSchema,
 	adminKey: moderatorKeySchema,
 	adminName: moderatorNameSchema,
 	alias: eventAliasSchema.optional(),
+	title: eventNameSchema,
 });
 const getDefaultValues = (): z.infer<typeof formSchema> => ({
-	title: "",
 	adminKey: "",
 	adminName: "",
 	alias: undefined,
+	title: "",
 });
 
 export const CreateEventModal: React.FC = () => {
@@ -50,45 +50,46 @@ export const CreateEventModal: React.FC = () => {
 	const router = useRouter();
 	const form = useAppForm({
 		defaultValues: getDefaultValues(),
-		validators: {
-			onChange: formSchema,
-		},
 		onSubmit: ({ value }) => {
+			// oxlint-disable-next-line no-use-before-define
 			addEventMutation.mutate({
-				title: value.title,
 				adminKey: value.adminKey,
 				adminName: value.adminName,
 				alias: value.alias || undefined,
+				title: value.title,
 			});
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
-				title: t("common.error"),
-				description: getAllErrors(formApi),
 				color: "danger",
+				description: getAllErrors(formApi),
+				title: t("common.error"),
 			});
+		},
+		validators: {
+			onChange: formSchema,
 		},
 	});
 	const [, setKeys] = React.use(ModeratorContext);
 	const addEventMutation = useMutation(
 		trpc.events.add.mutationOptions({
-			onSuccess: (result, variables) => {
+			onSuccess: async (result, variables) => {
 				addToast({
-					title: t("common.success"),
+					color: "success",
 					description: t("createEvent.toast.description", {
 						title: result.title,
 					}),
-					color: "success",
+					title: t("common.success"),
 				});
 				form.reset(getDefaultValues());
-				router.navigate({
-					to: "/events/$id",
-					params: { id: result.id },
-				});
 				setKeys((prevKeys) => ({
 					...prevKeys,
 					[result.id]: variables.adminKey,
 				}));
+				await router.navigate({
+					params: { id: result.id },
+					to: "/events/$id",
+				});
 			},
 		}),
 	);
@@ -108,7 +109,7 @@ export const CreateEventModal: React.FC = () => {
 						<form.Form
 							onSubmit={(e) => {
 								e.preventDefault();
-								form.handleSubmit();
+								void form.handleSubmit();
 							}}
 						>
 							<ModalHeader>{t("createEvent.title")}</ModalHeader>

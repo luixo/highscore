@@ -14,31 +14,6 @@ import type { AppRouter } from "~/server/routers/_app";
 import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
-export const Page: React.FC<{ idOrAlias: string }> = suspendedFallback(
-	({ idOrAlias }) => {
-		const trpc = useTRPC();
-		const event = useSuspenseQuery(
-			trpc.events.getByAlias.queryOptions({ idOrAlias }),
-		);
-		return <PageWithId event={event.data} />;
-	},
-	<Spinner size="lg" />,
-	({ error, idOrAlias, ...props }) => {
-		const { t } = useTranslation();
-		if (
-			error instanceof TRPCClientError &&
-			(error as TRPCClientError<AppRouter>).data?.code === "NOT_FOUND"
-		) {
-			return (
-				<div className="flex gap-4">
-					<span>{t("event.notFound", { id: idOrAlias })}</span>
-				</div>
-			);
-		}
-		return <ErrorComponent error={error} {...props} />;
-	},
-);
-
 const PageWithId: React.FC<{
 	event: Awaited<ReturnType<AppRouter["events"]["getByAlias"]>>;
 }> = ({ event }) => {
@@ -47,7 +22,7 @@ const PageWithId: React.FC<{
 	const queryClient = useQueryClient();
 	const { upsertEvent } = useVisitedEvents();
 	React.useEffect(() => {
-		upsertEvent({ id: event.id, alias: event.alias });
+		upsertEvent({ alias: event.alias, id: event.id });
 	}, [event, upsertEvent]);
 	useSubscription("game:added", ({ game }) => {
 		queryClient.setQueryData(
@@ -84,7 +59,7 @@ const PageWithId: React.FC<{
 				}
 				return [
 					...prevData.slice(0, matchedGameIndex),
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 					{ ...prevData[matchedGameIndex]!, title: updateObject.title },
 					...prevData.slice(matchedGameIndex + 1),
 				];
@@ -120,3 +95,28 @@ const PageWithId: React.FC<{
 		</div>
 	);
 };
+
+export const Page: React.FC<{ idOrAlias: string }> = suspendedFallback(
+	({ idOrAlias }) => {
+		const trpc = useTRPC();
+		const event = useSuspenseQuery(
+			trpc.events.getByAlias.queryOptions({ idOrAlias }),
+		);
+		return <PageWithId event={event.data} />;
+	},
+	<Spinner size="lg" />,
+	({ error, idOrAlias, ...props }) => {
+		const { t } = useTranslation();
+		if (
+			error instanceof TRPCClientError &&
+			(error as TRPCClientError<AppRouter>).data?.code === "NOT_FOUND"
+		) {
+			return (
+				<div className="flex gap-4">
+					<span>{t("event.notFound", { id: idOrAlias })}</span>
+				</div>
+			);
+		}
+		return <ErrorComponent error={error} {...props} />;
+	},
+);

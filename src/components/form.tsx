@@ -7,7 +7,9 @@ export const Form: React.FC<React.ComponentProps<typeof FormRaw>> = ({
 	...props
 }) => {
 	const form = useFormContext();
-	const onSubmit = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
+	const onSubmit = React.useCallback<
+		NonNullable<React.ComponentProps<typeof FormRaw>["onSubmit"]>
+	>(
 		(e) => {
 			e.preventDefault();
 			void form.handleSubmit();

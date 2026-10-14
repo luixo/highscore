@@ -1,35 +1,47 @@
+import { createIsomorphicFn } from "@tanstack/react-start";
 import type { BackendModule, InitOptions, ResourceKey } from "i18next";
 import { keys } from "remeda";
 import { getCookies } from "~/utils/cookies";
 import { getLanguages } from "~/utils/headers";
-import type { Language } from "~/utils/language";
+import type { Language, Namespace } from "~/utils/language";
 import { baseLanguage, defaultNamespace, languages } from "~/utils/language";
 
+const readIsomorphic = createIsomorphicFn()
+	.server(async (language: Language, namespace: Namespace) => {
+		/* oxlint-disable import/no-nodejs-modules */
+		const fs = await import("node:fs/promises");
+		const url = await import("node:url");
+		/* oxlint-enable import/no-nodejs-modules */
+		const jsonUrl = new url.URL(
+			`../../public/locales/${language}/${namespace}.json`,
+			import.meta.url,
+		);
+
+		const fileContent = await fs.readFile(url.fileURLToPath(jsonUrl));
+		const resource = JSON.parse(fileContent.toString("utf8")) as ResourceKey;
+		return resource;
+	})
+	.client(async (language: Language, namespace: Namespace) => {
+		const response = await fetch(`/locales/${language}/${namespace}.json`);
+		return response.json() as Promise<ResourceKey>;
+	});
+
 export const getBackendModule = (): BackendModule => ({
-	type: "backend",
-	// eslint-disable-next-line @typescript-eslint/no-empty-function
-	init: () => {},
+	init: () => {
+		/* empty */
+	},
+	// This is a bug in i18n
+	// oxlint-disable-next-line typescript/strict-void-return typescript/no-misused-promises
 	read: async (language, namespace) => {
 		try {
-			if (import.meta.env.SSR) {
-				const fs = await import("node:fs/promises");
-				const url = await import("node:url");
-				const jsonUrl = new url.URL(
-					`../../public/locales/${language}/${namespace}.json`,
-					import.meta.url,
-				);
-
-				const fileContent = await fs.readFile(url.fileURLToPath(jsonUrl));
-				const resource = JSON.parse(fileContent.toString("utf8"));
-				return resource as ResourceKey;
-			}
-			const response = await fetch(`/locales/${language}/${namespace}.json`);
-			return await (response.json() as Promise<ResourceKey>);
-		} catch (e) {
+			return await readIsomorphic(language as Language, namespace as Namespace);
+		} catch (error) {
+			// oxlint-disable-next-line no-console
 			console.error(`Failed to load ${language}/${namespace} i18n translation`);
-			throw e;
+			throw error;
 		}
 	},
+	type: "backend",
 });
 
 export const COOKIE_LANGUAGE_NAME = "LANGUAGE";
@@ -39,11 +51,11 @@ const isLanguage = (input: string): input is Language =>
 
 type Strategy = "cookie" | "header" | "baseLocale";
 const strategies: Strategy[] = ["cookie", "header", "baseLocale"];
-export const getLanguage = () => {
+export const getLanguage = async () => {
 	for (const strategy of strategies) {
 		switch (strategy) {
 			case "cookie": {
-				const cookies = getCookies();
+				const cookies = await getCookies();
 				const cookieLanguage = cookies[COOKIE_LANGUAGE_NAME] ?? "";
 				if (isLanguage(cookieLanguage)) {
 					return cookieLanguage;
@@ -68,14 +80,14 @@ export const getLanguage = () => {
 };
 
 export const i18nInitOptions: InitOptions = {
-	fallbackLng: baseLanguage,
 	defaultNS: defaultNamespace,
-	ns: [defaultNamespace],
-	supportedLngs: keys(languages),
+	fallbackLng: baseLanguage,
 	interpolation: {
 		// React doesn't need to escape values
 		escapeValue: false,
 	},
-	postProcess: "capitalize",
+	ns: [defaultNamespace],
 	partialBundledLanguages: true,
+	postProcess: "capitalize",
+	supportedLngs: keys(languages),
 };

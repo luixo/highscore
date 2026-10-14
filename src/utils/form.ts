@@ -1,7 +1,5 @@
-import {
-	type StandardSchemaV1Issue,
-	createFormHookContexts,
-} from "@tanstack/react-form";
+import { createFormHookContexts } from "@tanstack/react-form";
+import type { StandardSchemaV1Issue } from "@tanstack/react-form";
 import { isNonNullish } from "remeda";
 import type { AppFormApi } from "~/hooks/use-app-form";
 
@@ -17,8 +15,8 @@ export const getErrorState = ({ fieldError }: { fieldError?: FieldError }) => {
 		.map(({ message }) => message)
 		.filter(isNonNullish);
 	return {
-		isWarning: fieldErrorMessages.length !== 0,
 		errors: fieldErrorMessages,
+		isWarning: fieldErrorMessages.length !== 0,
 	};
 };
 

@@ -20,7 +20,7 @@ export const EventTitle = suspendedFallback<{ eventId: string }>(
 				eventQuery.error.data?.code === "NOT_FOUND"
 			) {
 				removeEvent(eventId);
-				router.navigate({ to: "/" });
+				void router.navigate({ to: "/" });
 			}
 		}, [eventId, eventQuery.error, eventQuery.status, removeEvent, router]);
 		return (

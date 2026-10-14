@@ -15,27 +15,31 @@ export const aggregateScore = (
 					aggregation.defaultValue) * weight
 			);
 		}
-		case "sum":
+		case "sum": {
 			return aggregation.values.reduce(
 				(acc, sub) => acc + aggregateScore(inputs, sub),
 				0,
 			);
-		case "difference":
+		}
+		case "difference": {
 			return aggregation.values.slice(1).reduce(
 				(acc, sub) => acc - aggregateScore(inputs, sub),
 				// @ts-expect-error We're simplifying types to make it work
 				aggregateScore(inputs, aggregation.values[0]),
 			);
-		case "multiply":
+		}
+		case "multiply": {
 			return aggregation.values.reduce(
 				(acc, sub) => acc * aggregateScore(inputs, sub),
 				1,
 			);
-		case "division":
+		}
+		case "division": {
 			return aggregation.values.slice(1).reduce(
 				(acc, sub) => acc / aggregateScore(inputs, sub),
 				// @ts-expect-error We're simplifying types to make it work
 				aggregateScore(inputs, aggregation.values[0]),
 			);
+		}
 	}
 };

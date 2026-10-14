@@ -1,2 +1,5 @@
-export const getUuid = () =>
-	typeof window === "undefined" ? "none" : window.crypto?.randomUUID?.();
+import { createIsomorphicFn } from "@tanstack/react-start";
+
+export const getUuid = createIsomorphicFn()
+	.server(() => "none")
+	.client(() => window.crypto.randomUUID());

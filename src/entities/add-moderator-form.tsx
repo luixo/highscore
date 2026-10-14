@@ -10,8 +10,8 @@ import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
 const formSchema = z.strictObject({
-	name: moderatorNameSchema,
 	key: moderatorKeySchema,
+	name: moderatorNameSchema,
 });
 
 export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
@@ -21,19 +21,20 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
 	const getDefaultValues = React.useCallback(
-		(): z.infer<typeof formSchema> => ({ name: "", key: "" }),
+		(): z.infer<typeof formSchema> => ({ key: "", name: "" }),
 		[],
 	);
 	const addModeratorMutation = useMutation(
 		trpc.moderator.add.mutationOptions({
 			onSuccess: (result) => {
 				addToast({
-					title: t("common.success"),
+					color: "success",
 					description: t("addModerator.toast.description", {
 						name: result.name,
 					}),
-					color: "success",
+					title: t("common.success"),
 				});
+				// oxlint-disable-next-line no-use-before-define
 				form.reset(getDefaultValues());
 				queryClient.setQueryData(
 					trpc.moderator.list.queryKey({ eventId }),
@@ -47,22 +48,22 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
 	);
 	const form = useAppForm({
 		defaultValues: getDefaultValues(),
-		validators: {
-			onChange: formSchema,
-		},
 		onSubmit: ({ value }) => {
 			addModeratorMutation.mutate({
 				eventId,
-				name: value.name,
 				key: value.key,
+				name: value.name,
 			});
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
-				title: t("common.error"),
-				description: getAllErrors(formApi),
 				color: "danger",
+				description: getAllErrors(formApi),
+				title: t("common.error"),
 			});
+		},
+		validators: {
+			onChange: formSchema,
 		},
 	});
 	return (
@@ -71,7 +72,7 @@ export const AddModeratorForm: React.FC<{ eventId: EventId }> = ({
 				className="w-full"
 				onSubmit={(e) => {
 					e.preventDefault();
-					form.handleSubmit();
+					void form.handleSubmit();
 				}}
 			>
 				<h3 className="text-2xl font-semibold">{t("addModerator.title")}</h3>

@@ -1,16 +1,16 @@
 import { TRPCError, initTRPC } from "@trpc/server";
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import { MODERATOR_COOKIE_KEYS } from "~/contexts/moderator-context";
-import { getCookie } from "~/server/cookie";
 import { getDatabase } from "~/server/database/database";
 import { moderatorKeysSchema } from "~/server/schemas";
+import { getCookies } from "~/utils/cookies";
 import { transformer } from "~/utils/transformer";
 
 const t = initTRPC.context<FetchCreateContextFnOptions>().create({
-	transformer,
 	errorFormatter({ shape }) {
 		return shape;
 	},
+	transformer,
 });
 
 export const { router, procedure: publicProcedure, createCallerFactory } = t;
@@ -26,14 +26,14 @@ const getEventId = async (rawInput: unknown) => {
 		"eventId" in rawInput && typeof rawInput.eventId === "string"
 			? rawInput.eventId
 			: undefined;
-	if (eventId) {
+	if (eventId !== undefined) {
 		return eventId;
 	}
 	const gameId =
 		"gameId" in rawInput && typeof rawInput.gameId === "string"
 			? rawInput.gameId
 			: undefined;
-	if (!gameId) {
+	if (gameId === undefined) {
 		throw new TRPCError({
 			code: "INTERNAL_SERVER_ERROR",
 			message: `Input doesn't have neither gameId nor eventId.`,
@@ -56,10 +56,8 @@ const getEventId = async (rawInput: unknown) => {
 
 export const protectedProcedure = publicProcedure.use(
 	async ({ ctx, next, ...rest }) => {
-		const moderatorKeysCookie = getCookie(
-			ctx.req.headers.get("cookie") || "",
-			MODERATOR_COOKIE_KEYS,
-		);
+		const cookies = await getCookies();
+		const moderatorKeysCookie = cookies[MODERATOR_COOKIE_KEYS];
 		const keysParsedResults =
 			moderatorKeysSchema.safeParse(moderatorKeysCookie);
 		if (!keysParsedResults.success) {
@@ -70,7 +68,7 @@ export const protectedProcedure = publicProcedure.use(
 		}
 		const eventId = await getEventId(await rest.getRawInput());
 		const moderatorKey = keysParsedResults.data[eventId];
-		if (!moderatorKey) {
+		if (moderatorKey === undefined) {
 			throw new TRPCError({
 				code: "UNAUTHORIZED",
 				message: "No moderator key provided.",
@@ -79,8 +77,8 @@ export const protectedProcedure = publicProcedure.use(
 		const db = getDatabase();
 		const moderator = await db
 			.selectFrom("moderators")
-			.where(({ and }) =>
-				and({
+			.where((eb) =>
+				eb.and({
 					eventId,
 					key: moderatorKey.toLowerCase(),
 				}),

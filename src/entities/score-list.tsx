@@ -26,6 +26,7 @@ const ScoreListInner = suspendedFallback<{ eventId: EventId }>(
 	},
 	Array.from({ length: 3 }).map((_, index) => (
 		<Skeleton
+			// oxlint-disable-next-line react/no-array-index-key
 			key={index}
 			className="min-h-[250px] w-[320px] rounded-lg lg:w-[240px]"
 		/>

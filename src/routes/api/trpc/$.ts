@@ -5,11 +5,11 @@ import { onError } from "~/server/trpc";
 
 const callback = async (request: Request) =>
 	fetchRequestHandler({
+		createContext: (opts) => opts,
 		endpoint: "/api/trpc",
+		onError,
 		req: request,
 		router: appRouter,
-		createContext: (opts) => opts,
-		onError,
 	});
 
 export const Route = createFileRoute("/api/trpc/$")({

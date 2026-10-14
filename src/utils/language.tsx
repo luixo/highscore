@@ -1,6 +1,8 @@
 import type { AssertAllEqual } from "~/types/utils";
+/* oxlint-disable import/no-relative-parent-imports */
 import type defaultEn from "../../public/locales/en/default.json";
 import type defaultRu from "../../public/locales/ru/default.json";
+/* oxlint-enable import/no-relative-parent-imports */
 
 // To add a language add code in the list, namespace jsons, import at (*) and verification at (**)
 export type Language = "en" | "ru";
@@ -31,7 +33,7 @@ type ValidatedResources = AssertAllEqual<
 >;
 
 declare module "i18next" {
-	// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+	// oxlint-disable-next-line @typescript-eslint/consistent-type-definitions
 	interface CustomTypeOptions {
 		defaultNS: "default";
 		resources: ValidatedResources extends never ? never : Resources;

@@ -11,9 +11,9 @@ import { Switch } from "~/components/switch";
 import { fieldContext, formContext } from "~/utils/form";
 
 const fieldComponents = {
-	TextField: Input,
 	NumberField: NumberInput,
 	SwitchField: Switch,
+	TextField: Input,
 };
 const formComponents = {
 	Form,
@@ -21,14 +21,14 @@ const formComponents = {
 };
 export const { useAppForm, withFieldGroup } = createFormHook({
 	fieldComponents,
-	formComponents,
 	fieldContext,
+	formComponents,
 	formContext,
 });
 
 export type AppFormApi<F> = FormApi<
 	F,
-	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/* oxlint-disable @typescript-eslint/no-explicit-any */
 	any,
 	any,
 	any,
@@ -40,12 +40,12 @@ export type AppFormApi<F> = FormApi<
 	any,
 	any,
 	any
-	/* eslint-enable @typescript-eslint/no-explicit-any */
+	/* oxlint-enable @typescript-eslint/no-explicit-any */
 >;
 
 export type AppForm<F> = AppFieldExtendedReactFormApi<
 	F,
-	/* eslint-disable @typescript-eslint/no-explicit-any */
+	/* oxlint-disable @typescript-eslint/no-explicit-any */
 	any,
 	any,
 	any,
@@ -57,7 +57,7 @@ export type AppForm<F> = AppFieldExtendedReactFormApi<
 	any,
 	any,
 	any,
-	/* eslint-enable @typescript-eslint/no-explicit-any */
+	/* oxlint-enable @typescript-eslint/no-explicit-any */
 	typeof fieldComponents,
 	typeof formComponents
 >;

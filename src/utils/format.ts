@@ -5,9 +5,9 @@ import type { Language } from "~/utils/language";
 
 // see https://github.com/microsoft/TypeScript/issues/60608
 declare global {
-	// eslint-disable-next-line @typescript-eslint/no-namespace
+	// oxlint-disable-next-line @typescript-eslint/no-namespace
 	namespace Intl {
-		// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+		// oxlint-disable-next-line @typescript-eslint/consistent-type-definitions
 		interface DurationFormatConstructor {
 			new (
 				...params: ConstructorParameters<typeof _DurationFormat>
@@ -46,12 +46,12 @@ const extractPlurals = (input: string): Record<Intl.LDMLPluralRule, string> => {
 	const zero = (parts.length >= 6 ? parts.at(0) : "") || other;
 	const one = (parts.length >= 6 ? parts[1] : parts[0]) || other;
 	return {
-		zero: zero,
-		one: one,
-		two: two,
-		few: few,
-		many: many,
-		other: other,
+		few,
+		many,
+		one,
+		other,
+		two,
+		zero,
 	};
 };
 
@@ -65,30 +65,30 @@ export const formatScore = (
 			const duration = Temporal.Duration.from({
 				milliseconds: Math.floor(score * 1000),
 			}).round({
+				largestUnit: "year",
 				relativeTo: Temporal.PlainDate.from(
 					new Date().toISOString().slice(0, 10),
 				),
-				largestUnit: "year",
 			});
 			return new Intl.DurationFormat(language, {
-				style: "narrow",
 				fractionalDigits: formatting.precision as 1,
-				seconds: "narrow",
 				milliseconds: "numeric",
+				seconds: "narrow",
+				style: "narrow",
 			}).format(duration);
 		}
 		case "regex": {
 			const numberFormat = new Intl.NumberFormat(language, {
-				maximumFractionDigits: formatting.precision ?? DEFAULT_PRECISION,
+				maximumFractionDigits: formatting.precision,
 			});
 			const pluralRules = new Intl.PluralRules(language);
 			return formatting.regex
-				.replaceAll(/\{([^}]+)\}/g, (match) => {
+				.replaceAll(/\{(?<match>[^}]+)\}/gu, (match) => {
 					const plurals = extractPlurals(match.slice(1, -1));
 					const pluralMatch = pluralRules.select(Math.floor(score));
 					return plurals[pluralMatch];
 				})
-				.replaceAll(/%value%/g, numberFormat.format(score));
+				.replaceAll("%value%", numberFormat.format(score));
 		}
 	}
 };

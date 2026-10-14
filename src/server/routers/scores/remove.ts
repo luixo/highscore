@@ -17,7 +17,7 @@ export const procedure = protectedProcedure
 
 		const matchedPlayer = await db
 			.selectFrom("scores")
-			.where(({ and }) => and({ gameId, playerName }))
+			.where((eb) => eb.and({ gameId, playerName }))
 			.select("playerName")
 			.executeTakeFirst();
 		if (!matchedPlayer) {
@@ -28,8 +28,8 @@ export const procedure = protectedProcedure
 		}
 		await db
 			.deleteFrom("scores")
-			.where(({ and }) =>
-				and({
+			.where((eb) =>
+				eb.and({
 					gameId,
 					playerName: matchedPlayer.playerName,
 				}),

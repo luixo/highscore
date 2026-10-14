@@ -19,20 +19,20 @@ import { useTRPC } from "~/utils/trpc";
 
 type ModeratorState = "loading" | "error" | "success";
 const moderatorStates = {
-	loading: {
-		outerClassName: "bg-neutral-50 dark:bg-neutral-100 border-neutral-100",
-		innerClassName: "text-neutral-700 dark:text-neutral",
-		Component: FaSpinner,
-	},
 	error: {
-		outerClassName: "bg-danger-50 dark:bg-danger-100 border-danger-100",
-		innerClassName: "text-danger-700 dark:text-danger",
 		Component: FaExclamation,
+		innerClassName: "text-danger-700 dark:text-danger",
+		outerClassName: "bg-danger-50 dark:bg-danger-100 border-danger-100",
+	},
+	loading: {
+		Component: FaSpinner,
+		innerClassName: "text-neutral-700 dark:text-neutral",
+		outerClassName: "bg-neutral-50 dark:bg-neutral-100 border-neutral-100",
 	},
 	success: {
-		outerClassName: "bg-success-50 dark:bg-success-100 border-success-100",
-		innerClassName: "text-success-700 dark:text-success",
 		Component: FaCheck,
+		innerClassName: "text-success-700 dark:text-success",
+		outerClassName: "bg-success-50 dark:bg-success-100 border-success-100",
 	},
 } satisfies Record<
 	ModeratorState,
@@ -42,7 +42,7 @@ const moderatorStates = {
 const ModeratorStatusButton: React.FC<{ state: ModeratorState }> = ({
 	state,
 }) => {
-	const Component = moderatorStates[state].Component;
+	const { Component } = moderatorStates[state];
 	return (
 		<div
 			className={twMerge(
@@ -78,20 +78,22 @@ const ModeratorStatus = suspendedFallback<{ eventId: GameId }>(
 export const LoginModal: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 	const trpc = useTRPC();
 	const { t } = useTranslation();
-	const [isPasswordVisible, setPasswordVisible] = React.useState(false);
+	const [passwordVisible, setPasswordVisible] = React.useState(false);
 	const emailRef = React.useRef<HTMLInputElement>(null);
 	const queryClient = useQueryClient();
 	const { moderatorKey, setModeratorKey, removeModeratorKey } =
 		useModeratorKey(eventId);
 	const [localModeratorKey, setLocalModeratorKey] = React.useState(
-		moderatorKey || "",
+		moderatorKey ?? "",
 	);
 	const moderatorQueryFilter = trpc.moderator.get.queryFilter({ eventId });
-	const onSubmit = React.useCallback<React.FormEventHandler>(
+	const onSubmit = React.useCallback<
+		NonNullable<React.ComponentProps<typeof Form>["onSubmit"]>
+	>(
 		(e) => {
 			e.preventDefault();
 			setModeratorKey(localModeratorKey);
-			queryClient.invalidateQueries(moderatorQueryFilter);
+			void queryClient.invalidateQueries(moderatorQueryFilter);
 		},
 		[localModeratorKey, queryClient, moderatorQueryFilter, setModeratorKey],
 	);
@@ -103,7 +105,7 @@ export const LoginModal: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				value={localModeratorKey}
 				onValueChange={setLocalModeratorKey}
 				ref={emailRef}
-				type={isPasswordVisible ? "text" : "password"}
+				type={passwordVisible ? "text" : "password"}
 				startContent={<ModeratorStatus key={moderatorKey} eventId={eventId} />}
 				endContent={
 					<button
@@ -111,7 +113,7 @@ export const LoginModal: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 						type="button"
 						onClick={() => setPasswordVisible((state) => !state)}
 					>
-						{isPasswordVisible ? (
+						{passwordVisible ? (
 							<FaEyeSlash className="text-default-400 pointer-events-none size-5" />
 						) : (
 							<FaEye className="text-default-400 pointer-events-none size-5" />
@@ -129,7 +131,7 @@ export const LoginModal: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				</Button>
 				<Button
 					color="danger"
-					isDisabled={!moderatorKey}
+					isDisabled={moderatorKey === undefined}
 					onPress={() => {
 						removeModeratorKey();
 						setLocalModeratorKey("");

@@ -1,7 +1,8 @@
 import type React from "react";
 import { Input as InputRaw, Textarea } from "@heroui/input";
 import { twMerge } from "tailwind-merge";
-import { type FieldError, getErrorState } from "~/utils/form";
+import { getErrorState } from "~/utils/form";
+import type { FieldError } from "~/utils/form";
 
 type Props = Omit<
 	React.ComponentProps<typeof InputRaw | typeof Textarea>,

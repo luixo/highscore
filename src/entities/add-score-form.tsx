@@ -1,5 +1,5 @@
 import React from "react";
-import type { Form, SharedSelection } from "@heroui/react";
+import type { SharedSelection } from "@heroui/react";
 import { Select, SelectItem, Skeleton, addToast } from "@heroui/react";
 import {
 	useMutation,
@@ -9,7 +9,8 @@ import {
 import { z } from "zod";
 import { Game } from "~/entities/game";
 import { suspendedFallback } from "~/entities/suspense-wrapper";
-import { type AppForm, useAppForm } from "~/hooks/use-app-form";
+import { useAppForm } from "~/hooks/use-app-form";
+import type { AppForm } from "~/hooks/use-app-form";
 import { useLastGame } from "~/hooks/use-last-game";
 import type { EventId, inputsSchema } from "~/server/schemas";
 import { playerNameSchema, scoresSchema } from "~/server/schemas";
@@ -36,9 +37,9 @@ const ScoresForm: React.FC<{
 		{(field) => (
 			<>
 				{field.state.value.map((fieldValue, index) => {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 					const input = inputs.values[index]!;
-					if (input.hidden) {
+					if (input.hidden === true) {
 						return <div key={fieldValue.key} className="hidden" />;
 					}
 					return (
@@ -71,9 +72,9 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 			playerName: "",
 			scores: {
 				values: game.inputs.values.map((input) => ({
-					type: input.type,
 					key: input.key,
-					value: input.defaultValue ?? undefined,
+					type: input.type,
+					value: input.defaultValue,
 				})),
 			},
 		}),
@@ -81,27 +82,28 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 	);
 	const form = useAppForm({
 		defaultValues: getDefaultValues(),
-		validators: {
-			onChange: formSchema,
-		},
 		onSubmit: ({ value }) => {
 			const playerNames = value.playerName
 				.split(",")
 				.map((name) => name.trim());
-			playerNames.forEach((playerName) =>
+			for (const playerName of playerNames) {
+				// oxlint-disable-next-line no-use-before-define
 				addScoreMutation.mutate({
-					playerName: playerName,
-					scores: value.scores,
 					gameId: game.id,
-				}),
-			);
+					playerName,
+					scores: value.scores,
+				});
+			}
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
-				title: t("common.error"),
-				description: getAllErrors(formApi),
 				color: "danger",
+				description: getAllErrors(formApi),
+				title: t("common.error"),
 			});
+		},
+		validators: {
+			onChange: formSchema,
 		},
 	});
 	const trpc = useTRPC();
@@ -111,12 +113,13 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 			onSuccess: (_res, variables) => {
 				const gamesCache = queryClient.getQueryData(trpc.games.list.queryKey());
 				const matchedGame = gamesCache?.find(
-					(game) => game.id === variables.gameId,
+					({ id }) => id === variables.gameId,
 				);
 				if (matchedGame) {
 					addToast({
-						title: t("common.success"),
+						color: "success",
 						description: t("addScore.toast.description", {
+							player: variables.playerName,
 							score: formatScore(
 								aggregateScore(
 									variables.scores.values,
@@ -125,9 +128,8 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 								matchedGame.formatting,
 								{ language },
 							),
-							player: variables.playerName,
 						}),
-						color: "success",
+						title: t("common.success"),
 					});
 				}
 				form.reset(getDefaultValues());
@@ -141,7 +143,7 @@ const SelectedGameForm: React.FC<{ game: GameType }> = ({ game }) => {
 					className="w-full"
 					onSubmit={(e) => {
 						e.preventDefault();
-						form.handleSubmit();
+						void form.handleSubmit();
 					}}
 				>
 					<form.AppField name="playerName">
@@ -186,8 +188,8 @@ const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
 			if (games.length === 0) {
 				return;
 			}
-			if (!gameId) {
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			if (gameId === undefined) {
+				// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 				setGameId(games[0]!.id);
 			} else if (!games.map((game) => game.id).includes(gameId)) {
 				removeGameId();
@@ -197,14 +199,14 @@ const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
 		const onSelectionChange = React.useCallback(
 			(selection: SharedSelection) => {
 				if (selection === "all") {
-					const firstGame = games[0];
+					const [firstGame] = games;
 					if (firstGame) {
 						setGameId(firstGame.id);
 					}
 				} else {
-					const selected = [...selection.keys()][0];
+					const [selected] = [...selection.keys()];
 					if (gameId !== selected) {
-						if (!selected) {
+						if (selected === undefined) {
 							removeGameId();
 						} else {
 							setGameId(selected.toString());
@@ -219,7 +221,7 @@ const AddScoreGames = suspendedFallback<{ eventId: EventId }>(
 				<Select
 					label={t("addScore.game.label")}
 					placeholder={t("addScore.game.placeholder")}
-					selectedKeys={gameId ? [gameId] : []}
+					selectedKeys={gameId === undefined ? [] : [gameId]}
 					variant="bordered"
 					onSelectionChange={onSelectionChange}
 				>

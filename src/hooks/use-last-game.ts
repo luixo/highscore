@@ -8,19 +8,18 @@ export const useLastGame = (eventId: EventId) => {
 	>("selectedGameIds", {});
 	return {
 		gameId: gamesRecord[eventId],
+		removeGameId: useCallback(() => {
+			setGamesRecord((prevRecord) => {
+				const nextRecord = { ...prevRecord };
+				delete nextRecord[eventId];
+				return nextRecord;
+			});
+		}, [eventId, setGamesRecord]),
 		setGameId: useCallback(
 			(id: string) => {
 				setGamesRecord((prevRecord) => ({ ...prevRecord, [eventId]: id }));
 			},
 			[eventId, setGamesRecord],
 		),
-		removeGameId: useCallback(() => {
-			setGamesRecord((prevRecord) => {
-				const nextRecord = { ...prevRecord };
-				// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-				delete nextRecord[eventId];
-				return nextRecord;
-			});
-		}, [eventId, setGamesRecord]),
 	};
 };

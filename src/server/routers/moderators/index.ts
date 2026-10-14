@@ -4,7 +4,7 @@ import { procedure as getProcedure } from "./get";
 import { procedure as listProcedure } from "./list";
 
 export const router = trpcRouter({
-	get: getProcedure,
 	add: addProcedure,
+	get: getProcedure,
 	list: listProcedure,
 });

@@ -6,7 +6,7 @@ import { procedure as upsertProcedure } from "./upsert";
 
 export const router = trpcRouter({
 	list: listProcedure,
-	upsert: upsertProcedure,
-	update: updateProcedure,
 	remove: removeProcedure,
+	update: updateProcedure,
+	upsert: upsertProcedure,
 });

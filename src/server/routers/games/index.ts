@@ -5,8 +5,8 @@ import { procedure as removeProcedure } from "./remove";
 import { procedure as updateProcedure } from "./update";
 
 export const router = trpcRouter({
-	list: listProcedure,
 	add: addProcedure,
+	list: listProcedure,
 	remove: removeProcedure,
 	update: updateProcedure,
 });

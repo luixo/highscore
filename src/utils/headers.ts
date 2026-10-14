@@ -7,13 +7,14 @@ export const getLanguages = createIsomorphicFn()
 			.split(",")
 			.map((lang) => {
 				const [tag = "", q = "1"] = lang.trim().split(";q=");
+				const [baseTag] = tag.split("-");
 				return {
+					baseTag: baseTag?.toLowerCase() ?? "",
 					fullTag: tag.toLowerCase(),
-					baseTag: tag.split("-")[0]?.toLowerCase() || "",
 					q: Number(q),
 				};
 			})
-			.sort((a, b) => b.q - a.q)
+			.toSorted((a, b) => b.q - a.q)
 			.flatMap(({ fullTag, baseTag }) => [fullTag, baseTag]),
 	)
 	.client(() => window.navigator.languages);

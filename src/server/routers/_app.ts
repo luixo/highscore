@@ -6,11 +6,11 @@ import { router as scoresRouter } from "./scores/index";
 import { router as utilsRouter } from "./utils/index";
 
 export const appRouter = router({
-	healthcheck: publicProcedure.query(() => "OK"),
-	games: gamesRouter,
-	scores: scoresRouter,
-	moderator: moderatorRouter,
 	events: eventsRouter,
+	games: gamesRouter,
+	healthcheck: publicProcedure.query(() => "OK"),
+	moderator: moderatorRouter,
+	scores: scoresRouter,
 	utils: utilsRouter,
 });
 

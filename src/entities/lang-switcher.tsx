@@ -2,11 +2,12 @@ import React from "react";
 import { Button } from "@heroui/react";
 import { keys } from "remeda";
 import { useTranslation } from "~/utils/i18n";
-import { type Language, languages } from "~/utils/language";
+import { languages } from "~/utils/language";
+import type { Language } from "~/utils/language";
 
 const FLAGS: Record<Language, string> = {
-	ru: "RU",
 	en: "GB",
+	ru: "RU",
 };
 
 export const LangSwitcher = () => {
@@ -32,7 +33,7 @@ export const LangSwitcher = () => {
 						}
 						isDisabled={language === currentLanguage}
 						onPress={() => {
-							changeLanguage(language);
+							void changeLanguage(language);
 						}}
 					>
 						{displayNames.of(language)}

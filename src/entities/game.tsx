@@ -17,9 +17,9 @@ const RemoveGameButton = suspendedFallback<{ eventId: string; gameId: string }>(
 			trpc.games.remove.mutationOptions({
 				onSuccess: (_result, variables) => {
 					addToast({
-						title: t("common.success"),
-						description: t("game.removed", { id: variables.id }),
 						color: "success",
+						description: t("game.removed", { id: variables.id }),
+						title: t("common.success"),
 					});
 				},
 			}),

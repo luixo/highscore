@@ -5,11 +5,11 @@ import type { SubscriptionMapping } from "~/utils/subscription";
 import { transformer } from "~/utils/transformer";
 
 const pusherInstance = new Pusher({
-	host: env.VITE_PUSHER_HOST,
-	useTLS: true,
 	appId: env.PUSHER_APP_ID,
+	host: env.VITE_PUSHER_HOST,
 	key: env.VITE_PUSHER_APP_KEY,
 	secret: env.PUSHER_SECRET,
+	useTLS: true,
 });
 
 export const pusherTrigger = <K extends keyof SubscriptionMapping>(

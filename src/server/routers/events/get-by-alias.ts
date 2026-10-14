@@ -15,7 +15,7 @@ export const procedure = publicProcedure
 		const db = getDatabase();
 		const result = await db
 			.selectFrom("events")
-			.where((qb) => qb.or({ id: id, alias: idOrAlias }))
+			.where((qb) => qb.or({ alias: idOrAlias, id }))
 			.select(["id", "alias"])
 			.executeTakeFirst();
 		if (!result) {
@@ -25,7 +25,7 @@ export const procedure = publicProcedure
 			});
 		}
 		return {
-			id: result.id,
 			alias: result.alias ?? undefined,
+			id: result.id,
 		};
 	});

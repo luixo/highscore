@@ -9,10 +9,12 @@ export const proxyMethods = <T extends object>(target: T, hooks: Partial<T>) =>
 						...args,
 						obj,
 					);
+					// oxlint-disable-next-line typescript/no-unsafe-return
 					return orig.apply(obj, args);
 				};
 			}
 
+			// oxlint-disable-next-line typescript/no-unsafe-return
 			return typeof orig === "function" ? orig.bind(obj) : orig;
 		},
 	});

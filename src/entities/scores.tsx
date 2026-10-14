@@ -39,17 +39,12 @@ const moderatorColumns = [...columns, { key: "actions" }];
 
 const RenamePlayerModal: React.FC<{
 	gameId: string;
-	playerName: string | undefined;
+	playerName: string;
 	onClose: () => void;
 }> = ({ gameId, playerName, onClose }) => {
 	const trpc = useTRPC();
 	const { t } = useTranslation();
-	const [localName, setLocalName] = React.useState<string>();
-	React.useEffect(() => {
-		if (playerName) {
-			setLocalName(playerName);
-		}
-	}, [playerName]);
+	const [localName, setLocalName] = React.useState(playerName);
 	const queryClient = useQueryClient();
 	const updateNameMutation = useMutation(
 		trpc.scores.update.mutationOptions({
@@ -74,7 +69,7 @@ const RenamePlayerModal: React.FC<{
 							...prevData.slice(0, matchedPlayerIndex),
 							{
 								// We just checked it exists
-								// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+								// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 								...prevData[matchedPlayerIndex]!,
 								playerName: nextPlayerName,
 							},
@@ -83,12 +78,12 @@ const RenamePlayerModal: React.FC<{
 					},
 				);
 				addToast({
-					title: t("common.success"),
-					description: t("scores.renamePlayer.toast.description", {
-						prevName: variables.playerName,
-						nextName: nextPlayerName,
-					}),
 					color: "success",
+					description: t("scores.renamePlayer.toast.description", {
+						nextName: nextPlayerName,
+						prevName: variables.playerName,
+					}),
+					title: t("common.success"),
 				});
 			},
 		}),
@@ -99,11 +94,11 @@ const RenamePlayerModal: React.FC<{
 		}
 		onClose();
 		updateNameMutation.mutate({
-			playerName: playerName,
 			gameId,
+			playerName,
 			updateObject: {
-				type: "playerName",
 				playerName: localName,
+				type: "playerName",
 			},
 		});
 	}, [playerName, localName, onClose, updateNameMutation, gameId]);
@@ -130,55 +125,42 @@ const RenamePlayerModal: React.FC<{
 
 const ChangePlayerScoreModal: React.FC<{
 	game: GameType;
-	player:
-		| {
-				name: string;
-				scores: z.infer<typeof scoresSchema>["values"];
-		  }
-		| undefined;
+	player: {
+		name: string;
+		scores: z.infer<typeof scoresSchema>["values"];
+	};
 	onClose: () => void;
 }> = ({ game, player, onClose }) => {
 	const trpc = useTRPC();
 	const { t } = useTranslation();
 	const [localScores, setLocalScores] = React.useState<
 		z.infer<typeof scoresSchema>["values"]
-	>(player?.scores ?? []);
-	React.useEffect(() => {
-		if (player) {
-			setLocalScores(player.scores);
-		}
-	}, [player]);
+	>(player.scores);
 	const updateScoreMutation = useMutation(
 		trpc.scores.update.mutationOptions({
 			onSuccess: (result, variables) => {
 				addToast({
-					title: t("common.success"),
+					color: "success",
 					description: t("scores.updateScore.toast.description", {
 						player: variables.playerName,
 						score: aggregateScore(result.values, game.aggregation),
 					}),
-					color: "success",
+					title: t("common.success"),
 				});
 			},
 		}),
 	);
 	const saveLocalPlayerName = React.useCallback(() => {
-		if (!player || !localScores) {
-			return;
-		}
 		onClose();
 		updateScoreMutation.mutate({
-			playerName: player.name,
 			gameId: game.id,
+			playerName: player.name,
 			updateObject: {
-				type: "scores",
 				scores: localScores,
+				type: "scores",
 			},
 		});
 	}, [player, localScores, onClose, updateScoreMutation, game.id]);
-	if (!player) {
-		return null;
-	}
 	return (
 		<Modal isOpen onOpenChange={onClose}>
 			<ModalContent>
@@ -187,7 +169,7 @@ const ChangePlayerScoreModal: React.FC<{
 				</ModalHeader>
 				<ModalBody className="w-full">
 					{localScores.map((localScore, index) => {
-						// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+						// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 						const input = game.inputs.values[index]!;
 						return (
 							<Input
@@ -201,7 +183,7 @@ const ChangePlayerScoreModal: React.FC<{
 									}
 									setLocalScores((prevLocalScores) => [
 										...prevLocalScores.slice(0, index),
-										// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+										// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 										{ ...prevLocalScores[index]!, value: Number(value) },
 										...prevLocalScores.slice(index + 1),
 									]);
@@ -269,14 +251,15 @@ const RecordInfoModal: React.FC<{
 							{(player) => (
 								<TableRow key={player.score}>
 									{(columnKey) => {
-										// @ts-expect-error We don't care much
-										const value = player[columnKey as keyof player];
+										const value = player[columnKey as keyof typeof player];
 										return (
 											<TableCell className="px-2">
 												{value instanceof Date
 													? value.toLocaleTimeString()
 													: typeof value === "object"
-														? value.name
+														? "name" in value && typeof value.name === "string"
+															? value.name
+															: undefined
 														: String(value)}
 											</TableCell>
 										);
@@ -302,28 +285,27 @@ const ScoreBoard: React.FC<{
 	const trpc = useTRPC();
 	const { t, language } = useTranslation();
 	const aggregatedData = scores.map((score) => ({
-		scores: score.values,
-		score: aggregateScore(score.values, game.aggregation),
 		playerName: score.playerName,
+		score: aggregateScore(score.values, game.aggregation),
+		scores: score.values,
 		updatedAt: score.updatedAt,
 	}));
-	const sortedData = aggregatedData.sort((a, b) => {
+	const sortedData = aggregatedData.toSorted((a, b) => {
 		if (game.sort.direction === "desc") {
 			return b.score - a.score;
-		} else {
-			return a.score - b.score;
 		}
+		return a.score - b.score;
 	});
 	const packedData = sortedData.reduce<PackedScore[]>((acc, element) => {
 		const lastElement = acc.pop();
 		if (!lastElement) {
-			return [{ index: 0, score: element.score, players: [element] }];
+			return [{ index: 0, players: [element], score: element.score }];
 		}
 		if (lastElement.score !== element.score) {
 			return [
 				...acc,
 				lastElement,
-				{ index: acc.length + 1, score: element.score, players: [element] },
+				{ index: acc.length + 1, players: [element], score: element.score },
 			];
 		}
 		return [
@@ -337,11 +319,11 @@ const ScoreBoard: React.FC<{
 		trpc.scores.remove.mutationOptions({
 			onSuccess: (_result, variables) => {
 				addToast({
-					title: t("common.success"),
+					color: "success",
 					description: t("scores.removeScore.toast.description", {
 						player: variables.playerName,
 					}),
-					color: "success",
+					title: t("common.success"),
 				});
 			},
 		}),
@@ -380,11 +362,10 @@ const ScoreBoard: React.FC<{
 								/>
 							</div>
 						);
-					} else {
-						return <div onClick={onClick}></div>;
 					}
+					return <button type="button" aria-label="Score" onKeyUp={onClick} />;
 				}
-				case "names":
+				case "names": {
 					return (
 						<div className="flex flex-wrap">
 							{packedScore.players.map((player) => (
@@ -392,8 +373,9 @@ const ScoreBoard: React.FC<{
 									key={player.playerName}
 									className="inline-flex whitespace-pre-wrap after:content-[',_'] last:after:content-['']"
 								>
-									<div
-										onClick={() => {
+									<button
+										type="button"
+										onKeyUp={() => {
 											if (moderatorStatus !== "admin") {
 												return;
 											}
@@ -404,7 +386,7 @@ const ScoreBoard: React.FC<{
 										}
 									>
 										{player.playerName}
-									</div>
+									</button>
 									{packedScore.players.length !== 1 && moderatorStatus ? (
 										<RemoveButton
 											className="size-4"
@@ -420,12 +402,14 @@ const ScoreBoard: React.FC<{
 							))}
 						</div>
 					);
+				}
 				case "score": {
-					// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+					// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 					const firstPlayer = packedScore.players[0]!;
 					return (
-						<div
-							onClick={() => {
+						<button
+							type="button"
+							onKeyUp={() => {
 								if (
 									moderatorStatus !== "admin" ||
 									packedScore.players.length !== 1
@@ -444,10 +428,10 @@ const ScoreBoard: React.FC<{
 							}
 						>
 							{formatScore(packedScore.score, game.formatting, { language })}
-						</div>
+						</button>
 					);
 				}
-				case "actions":
+				case "actions": {
 					if (packedScore.players.length !== 1) {
 						return null;
 					}
@@ -456,14 +440,16 @@ const ScoreBoard: React.FC<{
 							onClick={() =>
 								removeScoreMutation.mutate({
 									gameId: game.id,
-									// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+									// oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
 									playerName: packedScore.players[0]!.playerName,
 								})
 							}
 						/>
 					);
-				default:
+				}
+				default: {
 					return null;
+				}
 			}
 		},
 		[game.formatting, game.id, moderatorStatus, removeScoreMutation, language],
@@ -502,7 +488,7 @@ const ScoreBoard: React.FC<{
 								style={{
 									"--bg-start": getFadeStart(
 										// TODO: Fix it
-										// eslint-disable-next-line react-hooks/purity
+										// oxlint-disable-next-line react-hooks/purity
 										Date.now() - maxUpdatedAt,
 									).toString(),
 								}}
@@ -517,16 +503,22 @@ const ScoreBoard: React.FC<{
 					}}
 				</TableBody>
 			</Table>
-			<RenamePlayerModal
-				gameId={game.id}
-				playerName={editPlayerNameModal}
-				onClose={() => setEditPlayerNameModal(undefined)}
-			/>
-			<ChangePlayerScoreModal
-				game={game}
-				player={editPlayerScoreModal}
-				onClose={() => setEditPlayerScoreModal(undefined)}
-			/>
+			{editPlayerNameModal !== undefined && (
+				<RenamePlayerModal
+					key={editPlayerNameModal}
+					gameId={game.id}
+					playerName={editPlayerNameModal}
+					onClose={() => setEditPlayerNameModal(undefined)}
+				/>
+			)}
+			{editPlayerScoreModal !== undefined && (
+				<ChangePlayerScoreModal
+					key={editPlayerScoreModal.name}
+					game={game}
+					player={editPlayerScoreModal}
+					onClose={() => setEditPlayerScoreModal(undefined)}
+				/>
+			)}
 			<RecordInfoModal
 				record={showInfoRecord}
 				onClose={() => setShowInfoRecord(undefined)}
@@ -556,6 +548,7 @@ const ScoresInner: React.FC<{
 	},
 	Array.from({ length: 3 }).map((_, index) => (
 		<Skeleton
+			// oxlint-disable-next-line react/no-array-index-key
 			key={index}
 			className="h-8 w-full not-last:border-b first:rounded-t-sm last:rounded-b-sm"
 		/>
