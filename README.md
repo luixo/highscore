@@ -5,12 +5,12 @@ An app to keep track of high scores of games
 ### Prerequisites
 
 ```sh
-corepack enable
-yarn
+# Install Bun 1.4.3 (https://bun.sh), then:
+bun install --frozen-lockfile
 ```
 
 ### Development
 
 ```sh
-yarn dev
+bun run dev
 ```

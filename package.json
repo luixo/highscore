@@ -12,7 +12,8 @@
     "lint": "eslint --max-warnings=0",
     "lint:fix": "eslint --max-warnings=0 --fix",
     "start": "node .output/server/index.mjs",
-    "typecheck": "tsc --noEmit"
+    "lint-staged": "lint-staged",
+    "typecheck": "bun check"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.962.0",
@@ -80,6 +81,7 @@
     "kysely-ctl": "^0.17.0",
     "lint-staged": "^15.2.7",
     "nitro": "^3.0.1-alpha.1",
+    "pre-commit": "^2.0.0",
     "prettier": "^3.6.2",
     "prettier-plugin-packagejson": "^2.5.19",
     "prettier-plugin-tailwindcss": "^0.6.14",
@@ -90,5 +92,21 @@
     "vite-plugin-devtools-json": "^1.0.0",
     "vite-tsconfig-paths": "^6.0.3"
   },
-  "packageManager": "yarn@4.9.2+sha512.1fc009bc09d13cfd0e19efa44cbfc2b9cf6ca61482725eb35bbc5e257e093ebf4130db6dfe15d604ff4b79efd8e1e8e99b25fa7d0a6197c9f9826358d4d65c3c"
+  "lint-staged": {
+    "*.{j,t}s{,x}": [
+      "oxlint --fix"
+    ]
+  },
+  "pre-commit": [
+    "typecheck",
+    "format",
+    "lint-staged"
+  ],
+  "engines": {
+    "node": "26"
+  },
+  "packageManager": "bun@1.4.3",
+  "trustedDependencies": [
+    "pre-commit"
+  ]
 }
