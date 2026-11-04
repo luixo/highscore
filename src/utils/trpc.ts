@@ -18,18 +18,15 @@ import { getLocalTrpcClient } from "~/server/trpc";
 import { proxyMethods } from "~/utils/proxy";
 import { transformer } from "./transformer";
 
-const getBaseUrl = () => {
-	if (typeof window !== "undefined") {
-		return "";
-	}
-	return `http://localhost:${env.PORT}`;
-};
+const getBaseUrl = createIsomorphicFn()
+	.client(() => "")
+	.server(() => `http://localhost:${env.PORT}`);
 
 const baseUrl = `${getBaseUrl()}/api/trpc`;
 export const links = [
 	loggerLink({
 		enabled: (opts) =>
-			env.NODE_ENV === "development" ||
+			import.meta.env.DEV ||
 			(opts.direction === "down" && opts.result instanceof Error),
 	}),
 	splitLink({
