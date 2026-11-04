@@ -45,15 +45,13 @@ export const Game: React.FC<{
 	return (
 		<Card className="min-h-[250px] w-[320px] lg:w-[240px]">
 			<CardHeader className="bg-secondary/50 text-foreground relative flex aspect-[32/5] w-full justify-between gap-2 overflow-hidden">
-				{game.logoUrl ? (
-					<img
-						className={`absolute inset-0 -z-20 size-full object-cover ${imageStatus === "error" ? "hidden" : ""}`}
-						src={game.logoUrl}
-						alt={game.title}
-						onError={() => setImageStatus("error")}
-						onLoad={() => setImageStatus("success")}
-					/>
-				) : null}
+				<img
+					className={`absolute inset-0 -z-20 size-full object-cover ${imageStatus === "error" ? "hidden" : ""}`}
+					src={game.logoUrl}
+					alt={game.title}
+					onError={() => setImageStatus("error")}
+					onLoad={() => setImageStatus("success")}
+				/>
 				{imageStatus === "success" ? null : <h3>{game.title}</h3>}
 				<RemoveGameButton eventId={game.eventId} gameId={game.id} />
 			</CardHeader>

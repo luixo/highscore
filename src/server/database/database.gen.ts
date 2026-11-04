@@ -42,7 +42,6 @@ export interface Games {
   formatting: Json;
   id: Generated<string>;
   inputs: Json;
-  logoUrl: string | null;
   sort: Json;
   title: string;
   updatedAt: Generated<Timestamp>;

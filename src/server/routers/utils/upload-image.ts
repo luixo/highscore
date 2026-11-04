@@ -2,7 +2,7 @@ import { v4 } from "uuid";
 import { zfd } from "zod-form-data";
 import { validateImage } from "~/server/image";
 import { publicProcedure } from "~/server/router";
-import { S3_IMAGES_PREFIX, getS3Client } from "~/server/s3";
+import { getImageKey, getImageUrl, getS3Client } from "~/server/s3";
 
 export const procedure = publicProcedure
 	.input(zfd.formData({ image: zfd.file() }))
@@ -12,7 +12,6 @@ export const procedure = publicProcedure
 			Buffer.from(await image.arrayBuffer()),
 		);
 		const id = v4();
-		const avatarKey = [S3_IMAGES_PREFIX, `${id}.png`].join("/");
-		await s3Client.putObject(avatarKey, validatedImage);
-		return { url: [s3Client.endpoint, s3Client.bucket, avatarKey].join("/") };
+		await s3Client.putObject(getImageKey(id), validatedImage);
+		return { id, url: getImageUrl(id) };
 	});

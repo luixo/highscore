@@ -6,12 +6,12 @@ import { useTRPC } from "~/utils/trpc";
 
 export const UploadImage: React.FC<{
 	children: (opts: { onPress: () => void }) => void;
-	onUpload: (url: string) => void;
+	onUpload: (image: { id: string; url: string }) => void;
 }> = ({ onUpload, children }) => {
 	const trpc = useTRPC();
 	const uploadImageMutation = useMutation(
 		trpc.utils.uploadImage.mutationOptions({
-			onSuccess: ({ url }) => onUpload(url),
+			onSuccess: onUpload,
 		}),
 	);
 	const inputClickRef = React.useRef<() => void>(doNothing());

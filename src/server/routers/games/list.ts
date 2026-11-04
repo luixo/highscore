@@ -7,6 +7,7 @@ import {
 	getSort,
 } from "~/server/jsons";
 import { publicProcedure } from "~/server/router";
+import { getImageUrl } from "~/server/s3";
 import { eventIdSchema } from "~/server/schemas";
 
 export const procedure = publicProcedure
@@ -24,7 +25,6 @@ export const procedure = publicProcedure
 			.select([
 				"id",
 				"title",
-				"logoUrl",
 				"inputs",
 				"formatting",
 				"aggregation",
@@ -39,6 +39,7 @@ export const procedure = publicProcedure
 			aggregation: getAggregation(game.aggregation),
 			formatting: getFormatting(game.formatting),
 			inputs: getInputs(game.inputs),
+			logoUrl: getImageUrl(game.id),
 			sort: getSort(game.sort),
 		}));
 	});

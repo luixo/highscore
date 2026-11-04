@@ -3,6 +3,14 @@ import { env } from "./env";
 
 export const S3_IMAGES_PREFIX = "images";
 
+export const getImageKey = (id: string) =>
+	[S3_IMAGES_PREFIX, `${id}.png`].join("/");
+
+export const getImageUrl = (id: string) =>
+	[env.S3_ENDPOINT.replace(/\/$/u, ""), env.S3_BUCKET, getImageKey(id)].join(
+		"/",
+	);
+
 type S3Client = {
 	putObject: (key: string, object: Buffer) => Promise<void>;
 	bucket: string;

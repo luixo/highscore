@@ -7,6 +7,7 @@ import {
 	getSort,
 } from "~/server/jsons";
 import { adminProcedure } from "~/server/router";
+import { getImageUrl } from "~/server/s3";
 import { addGameSchema } from "~/server/schemas";
 import { pushEvent } from "~/server/subscription";
 
@@ -14,10 +15,17 @@ export const procedure = adminProcedure
 	.input(addGameSchema)
 	.mutation(
 		async ({
-			input: { eventId, title, logoUrl, inputs, aggregation, formatting, sort },
+			input: {
+				eventId,
+				title,
+				id = v4(),
+				inputs,
+				aggregation,
+				formatting,
+				sort,
+			},
 		}) => {
 			const db = getDatabase();
-			const id = v4();
 			const gameRaw = await db
 				.insertInto("games")
 				.values({
@@ -26,7 +34,6 @@ export const procedure = adminProcedure
 					formatting,
 					id,
 					inputs,
-					logoUrl,
 					sort,
 					title,
 				})
@@ -34,7 +41,6 @@ export const procedure = adminProcedure
 					"eventId",
 					"id",
 					"title",
-					"logoUrl",
 					"inputs",
 					"aggregation",
 					"formatting",
@@ -48,6 +54,7 @@ export const procedure = adminProcedure
 				aggregation: getAggregation(gameRaw.aggregation),
 				formatting: getFormatting(gameRaw.formatting),
 				inputs: getInputs(gameRaw.inputs),
+				logoUrl: getImageUrl(gameRaw.id),
 				sort: getSort(gameRaw.sort),
 			};
 			await pushEvent("game:added", { game });

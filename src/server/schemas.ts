@@ -19,8 +19,6 @@ export type EventId = z.infer<typeof eventIdSchema>;
 export const gameIdSchema = z.uuid();
 export type GameId = z.infer<typeof gameIdSchema>;
 
-export const logoUrlSchema = z.url();
-
 export const eventNameSchema = z.string().min(1).max(64);
 export const eventAliasSchema = z
 	.string()
@@ -158,8 +156,8 @@ export const addGameSchema = z.object({
 	aggregation: aggregationSchema,
 	eventId: eventIdSchema,
 	formatting: formattingSchema,
+	id: gameIdSchema.optional(),
 	inputs: inputsSchema,
-	logoUrl: logoUrlSchema.optional(),
 	sort: sortSchema,
 	title: gameTitleSchema,
 });

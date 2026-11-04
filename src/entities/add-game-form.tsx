@@ -12,7 +12,7 @@ import { useSelector } from "@tanstack/react-form";
 import type { DeepKeysOfType } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
 import { CiCircleRemove } from "react-icons/ci";
-import type { z } from "zod";
+import { z } from "zod";
 import { UploadImage } from "~/entities/upload-image";
 import { useAppForm, withFieldGroup } from "~/hooks/use-app-form";
 import type { AppForm } from "~/hooks/use-app-form";
@@ -29,7 +29,9 @@ import { DEFAULT_PRECISION, formatScore } from "~/utils/format";
 import { useTranslation } from "~/utils/i18n";
 import { useTRPC } from "~/utils/trpc";
 
-const formSchema = addGameSchema.omit({ eventId: true });
+const formSchema = addGameSchema.omit({ eventId: true }).extend({
+	logoUrl: z.url().optional(),
+});
 type FormType = z.infer<typeof formSchema>;
 
 const FormatForm: React.FC<{ form: AppForm<FormType> }> = ({ form }) => {
@@ -790,6 +792,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				regex: "%value%",
 				type: "regex",
 			},
+			id: undefined,
 			inputs: {
 				values: [
 					{
@@ -810,7 +813,7 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 		defaultValues: getDefaultValues(),
 		onSubmit: ({ value }) => {
 			// oxlint-disable-next-line no-use-before-define
-			addGameMutation.mutate({ eventId, ...value });
+			addGameMutation.mutate(addGameSchema.parse({ eventId, ...value }));
 		},
 		onSubmitInvalid: ({ formApi }) => {
 			addToast({
@@ -863,7 +866,12 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 				<form.AppField name="logoUrl">
 					{(field) =>
 						field.state.value === undefined ? (
-							<UploadImage onUpload={(url) => field.setValue(url)}>
+							<UploadImage
+								onUpload={({ id, url }) => {
+									form.setFieldValue("id", id);
+									field.setValue(url);
+								}}
+							>
 								{({ onPress }) => (
 									<Button
 										onPress={onPress}
@@ -886,7 +894,10 @@ export const AddGameForm: React.FC<{ eventId: EventId }> = ({ eventId }) => {
 								endContent={
 									<CiCircleRemove
 										className="text-danger-400 size-6 cursor-pointer"
-										onClick={() => field.setValue(undefined)}
+										onClick={() => {
+											form.setFieldValue("id", undefined);
+											field.setValue(undefined);
+										}}
 									/>
 								}
 							/>
